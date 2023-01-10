@@ -1,6 +1,6 @@
-type VisibilityOption = 'Index';
+type VisibilityOption = 'Candidates';
 
-const VisibilityOptions: readonly VisibilityOption[] = ['Index'] as const;
+const VisibilityOptions: readonly VisibilityOption[] = ['Candidates'] as const;
 
 export type { VisibilityOption }
 export { VisibilityOptions }

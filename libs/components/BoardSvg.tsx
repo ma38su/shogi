@@ -40,14 +40,14 @@ type PiecePtr = {
 
 type Props = {
   position: Map<number, [PieceType, PlayerColor]>,
+  setPosition: (position: Map<number, [PieceType, PlayerColor]>) => void,
   visibilityOptions?: VisibilityOption[],
 };
 
 function BoardSvg(props: Props) {
 
-  const { position: initPosition, visibilityOptions } = props;
+  const { position, setPosition, visibilityOptions } = props;
 
-  const [position, setPosition] = React.useState(initPosition);
   const gridSize = 1;
   const margin = 1;
   const scale = 40;
@@ -78,7 +78,7 @@ function BoardSvg(props: Props) {
     position.set(index1, [piece, color]);
     setPosition(new Map(position));
     setPtr(null);
-  }, [ptr, position]);
+  }, [ptr, position, setPosition]);
 
   const selectedIndex = ptr?.index;
 

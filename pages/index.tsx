@@ -19,6 +19,11 @@ export default function Home() {
     }
   }
 
+  const [position, setPosition] = React.useState(InitialPosition);
+  const handleResetPosition = () => {
+    setPosition(new Map(InitialPosition));
+  };
+
   return (
     <>
       <Head>
@@ -33,7 +38,9 @@ export default function Home() {
 
         <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
 
-        <BoardSvg position={InitialPosition} visibilityOptions={visibilityOptions} />
+        <BoardSvg position={position} setPosition={setPosition} visibilityOptions={visibilityOptions} />
+
+        <Button colorScheme='red' onClick={handleResetPosition}>Reset</Button>
 
         {
           VisibilityOptions.map((option) => {
