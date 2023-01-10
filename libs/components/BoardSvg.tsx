@@ -1,6 +1,6 @@
 import React from "react";
 import { createRectanglePolygon } from "../geometry";
-import { PlayerColor, PieceType, xyToIndex } from "../shogi";
+import { PlayerTurn, PieceType, xyToIndex, Game } from "../shogi";
 import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvg } from "./PieceSvg";
@@ -35,18 +35,22 @@ const Grid = React.memo(function Grid(props: {size: number, scale: number}) {
 type PiecePtr = {
   index: number,
   piece: PieceType,
-  color: PlayerColor,
+  color: PlayerTurn,
 };
 
 type Props = {
-  position: Map<number, [PieceType, PlayerColor]>,
-  setPosition: (position: Map<number, [PieceType, PlayerColor]>) => void,
+  game: Game,
+  setGame: React.Dispatch<React.SetStateAction<Game>>,
   visibilityOptions?: VisibilityOption[],
 };
 
 function BoardSvg(props: Props) {
 
-  const { position, setPosition, visibilityOptions } = props;
+  const {
+    game,
+    setGame,
+    visibilityOptions,
+  } = props;
 
   const gridSize = 1;
   const margin = 1;
@@ -61,26 +65,39 @@ function BoardSvg(props: Props) {
 
   const [ptr, setPtr] = React.useState<PiecePtr | null>(null);
 
-  const onClick = React.useCallback(function onClick(x: number, y: number, color: PlayerColor, type: PieceType) {
+  const onClick = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn, type: PieceType) {
+    if (turn !== game.turn) return;
     setPtr({
       index: (x * 9) + y,
       piece: type,
-      color,
+      color: turn,
     });
-  }, []);
+  }, [game]);
 
-  const handleMove = React.useCallback(function onClick(x: number, y: number, color: PlayerColor, type: PieceType) {
+  const handleMove = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn, type: PieceType) {
     if (!ptr) throw new Error();
 
     const index1 = xyToIndex(x, y);
     const { index, piece } = ptr;
+    const { position } = game;
     position.delete(index);
-    position.set(index1, [piece, color]);
-    setPosition(new Map(position));
-    setPtr(null);
-  }, [ptr, position, setPosition]);
+    position.set(index1, [piece, turn]);
+
+    setGame((prev: Game) => {
+      return {
+        turn: !prev.turn,
+        position: new Map(position),
+      } satisfies Game;
+    });
+  }, [ptr, game, setGame]);
 
   const selectedIndex = ptr?.index;
+
+  const { position } = game;
+
+  React.useEffect(() => {
+    setPtr(null);
+  }, [game]);
 
   return (
     <svg {...{width, height}} className='disable-select'>
@@ -92,8 +109,8 @@ function BoardSvg(props: Props) {
         <polygon points={polylineToPoints(createRectanglePolygon(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
 
         {
-          Array.from(position.entries()).map(([index, [type, color]]) => {
-            return <PieceSvg key={index} {...{type, index, color, scale, onClick, selected: selectedIndex === index}} />
+          Array.from(position.entries()).map(([index, [type, turn]]) => {
+            return <PieceSvg key={index} {...{type, index, turn: turn, scale, onClick, selected: selectedIndex === index}} />
           })
         }
 

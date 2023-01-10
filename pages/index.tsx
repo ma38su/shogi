@@ -7,6 +7,7 @@ import { InitialPosition } from '../record/data';
 import { BoardSvg } from '../libs/components/BoardSvg'
 import { VisibilityOption, VisibilityOptions } from '../libs/VisibilityOption';
 
+
 export default function Home() {
   const [visibilityOptions, setVisibilityOptions] = React.useState<VisibilityOption[]>([]);
 
@@ -19,11 +20,15 @@ export default function Home() {
     }
   }
 
-  const [position, setPosition] = React.useState(InitialPosition);
+  const [game, setGame] = React.useState({turn: true, position: InitialPosition});
   const handleResetPosition = () => {
-    setPosition(new Map(InitialPosition));
+    setGame(_ => ({
+      turn: true,
+      position: new Map(InitialPosition),
+    }));
   };
 
+  const { turn } = game;
   return (
     <>
       <Head>
@@ -38,7 +43,7 @@ export default function Home() {
 
         <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
 
-        <BoardSvg position={position} setPosition={setPosition} visibilityOptions={visibilityOptions} />
+        <BoardSvg game={game} setGame={setGame} visibilityOptions={visibilityOptions} />
 
         <Button colorScheme='red' onClick={handleResetPosition}>Reset</Button>
 
@@ -51,6 +56,8 @@ export default function Home() {
             )
           })
         }
+
+        <Text>{turn ? '先手' : '後手'}</Text>
       </Container>
     </>
   )

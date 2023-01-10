@@ -1,9 +1,9 @@
 import React from "react";
 import { createRectanglePolygon, XY, XYArray } from "../geometry";
-import { PieceType, PlayerColor, xyToIndex } from "../shogi";
+import { PieceType, PlayerTurn, xyToIndex } from "../shogi";
 import { polylineToPoints } from "../svg";
 
-function filterCandidates(x0: number, y0: number, color: PlayerColor, position: Map<number, [PieceType, PlayerColor]>, list: XYArray) {
+function filterCandidates(x0: number, y0: number, color: PlayerTurn, position: Map<number, [PieceType, PlayerTurn]>, list: XYArray) {
     const candidates: XY[] = [];
     for (const xy of list) {
       const [dx, dy] = xy;
@@ -30,10 +30,10 @@ function filterCandidates(x0: number, y0: number, color: PlayerColor, position: 
     x: number,
     y: number,
     piece: PieceType,
-    color: PlayerColor,
+    color: PlayerTurn,
     candidates: XYArray,
-    position: Map<number, [PieceType, PlayerColor]>,
-    onClick: (x: number, y: number, color: PlayerColor, type: PieceType) => void
+    position: Map<number, [PieceType, PlayerTurn]>,
+    onClick: (x: number, y: number, color: PlayerTurn, type: PieceType) => void
   };
 
   const CandidateLineSvg = React.memo(function CandidateLineSvg(props: SubProps) {

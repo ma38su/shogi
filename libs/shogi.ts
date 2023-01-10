@@ -2,7 +2,7 @@ import { XYArray } from "./geometry";
 
 type PieceType = '歩' | '桂' | '香' | '角' | '飛' | '馬' | 'と' | '龍' | '銀' | '金' | '王' | '玉';
 
-type PlayerColor = 'B' | 'W';
+type PlayerColor = true | false;
 
 function inverse(positions: XYArray[]): XYArray[] {
   return positions.map(position => position.map(([x, y]) => [x, -y]))
@@ -132,12 +132,17 @@ const moveMap: Map<PieceType, XYArray[]> = new Map(Object.entries({
   
 function getMoveCandidateList(piece: PieceType, color: PlayerColor) {
   const list = moveMap.get(piece) ?? [];
-  return color === 'B' ? list : inverse(list);
+  return color ? list : inverse(list);
 }
 
 function xyToIndex(x: number, y: number) {
   return (x * 9) + y;
 }
+
+type Game = {
+  position: Map<number, [PieceType, PlayerColor]>,
+  turn: PlayerColor,
+}
   
 export { getMoveCandidateList, xyToIndex }
-export type { PieceType, PlayerColor }
+export type { PieceType, PlayerColor as PlayerTurn, Game }
