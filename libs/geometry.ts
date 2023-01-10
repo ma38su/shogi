@@ -77,13 +77,13 @@ function getDirection(p1: XY, p2: XY) {
     throw new Error(`${p1}, ${p2}`);
 }
 
-function buildRectanglePolygon(width: number, height: number): XYArray {
-    return [
-        [0, 0],
-        [width, 0],
-        [width, height],
-        [0, height],
-    ];
+function createRectanglePolygon(width: number, height: number): XYArray {
+  return [
+    [0, 0],
+    [width, 0],
+    [width, height],
+    [0, height]
+  ];
 }
 
 function transformPolylines(polylines: XYArray[], transFunc: TransFunc) {
@@ -183,7 +183,7 @@ export {
     toBounds,
     getDirection,
     transformPolyline, transformPolylines,
-    buildRectanglePolygon, crossProduct,
+    createRectanglePolygon, crossProduct,
     mergePolylinesLayer,
     calculatePolygonSquare,
     GridAngleLabels,

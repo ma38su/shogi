@@ -1,17 +1,16 @@
 import React from "react";
-import { XYArray } from "../geometry";
-import { Color, PieceType } from "../shogi";
-import { generateGrid, polylinesToPath, polylineToPoints } from "../svg";
+import { createRectanglePolygon } from "../geometry";
+import { PlayerColor, PieceType, xyToIndex } from "../shogi";
+import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvg } from "./PieceSvg";
-
-const yLabel = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+import { CandidatesSvg } from "./CandidatesSvg";
 
 const XLabel = React.memo(function XLabel() {
   return (
     <>
     {
-        [1, 2, 3, 4, 5, 6, 7, 8, 9]
+      [1, 2, 3, 4, 5, 6, 7, 8, 9]
         .map((n, i) => <text key={n} fontSize={0.4} textAnchor='middle' transform={`translate(${8.5-i},-0.2)`}>{n}</text>)
     }
     </>
@@ -28,32 +27,27 @@ const YLabel = React.memo(function YLabel() {
   )
 });
 
+const Grid = React.memo(function Grid(props: {size: number, scale: number}) {
+  const { size, scale } = props;
+  return <path d={generateGrid(9, 9, size)} strokeWidth={1/scale} stroke='#888' fill='none' />
+});
+
+type PiecePtr = {
+  index: number,
+  piece: PieceType,
+  color: PlayerColor,
+};
+
 type Props = {
-  position: Map<string, [PieceType, Color]>,
+  position: Map<number, [PieceType, PlayerColor]>,
   visibilityOptions?: VisibilityOption[],
 };
 
-
-function range(start: number, end: number): number[] {
-  const list: number[] = [];
-  for (let i = start; i < end; ++i) {
-    list.push(i);
-  }
-  return list;
-}
-
-function createRectangle(width: number, height: number): XYArray {
-  return [
-    [0, 0],
-    [width, 0],
-    [width, height],
-    [0, height]
-  ];
-}
-
 function BoardSvg(props: Props) {
 
-  const { position, visibilityOptions } = props;
+  const { position: initPosition, visibilityOptions } = props;
+
+  const [position, setPosition] = React.useState(initPosition);
   const gridSize = 1;
   const margin = 1;
   const scale = 40;
@@ -65,10 +59,28 @@ function BoardSvg(props: Props) {
   const width = boardWidth * scale + margin * 2 + widthGuide;
   const height = boardHeight * scale + margin * 2 + heightGuide;
 
-  const onClick = (x: number, y: number, color: Color, type: PieceType) => {
-    console.log({x, y, color, type});
-    alert(`x: ${x}, y: ${y}, color: ${color}, type: ${type}`);
-  };
+  const [ptr, setPtr] = React.useState<PiecePtr | null>(null);
+
+  const onClick = React.useCallback(function onClick(x: number, y: number, color: PlayerColor, type: PieceType) {
+    setPtr({
+      index: (x * 9) + y,
+      piece: type,
+      color,
+    });
+  }, []);
+
+  const handleMove = React.useCallback(function onClick(x: number, y: number, color: PlayerColor, type: PieceType) {
+    if (!ptr) throw new Error();
+
+    const index1 = xyToIndex(x, y);
+    const { index, piece } = ptr;
+    position.delete(index);
+    position.set(index1, [piece, color]);
+    setPosition(new Map(position));
+    setPtr(null);
+  }, [ptr, position]);
+
+  const selectedIndex = ptr?.index;
 
   return (
     <svg {...{width, height}} className='disable-select'>
@@ -77,33 +89,17 @@ function BoardSvg(props: Props) {
         <XLabel />
         <YLabel />
 
-        <polygon points={polylineToPoints(createRectangle(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
-        <path d={generateGrid(9, 9, gridSize)} strokeWidth={1/scale} stroke='#888' fill='none' />
+        <polygon points={polylineToPoints(createRectanglePolygon(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
 
         {
-          visibilityOptions?.includes('Index') && (
-            // index
-            range(0, 81).map((i) => {
-              const y = i % 9;
-              const x = Math.floor(i/9);
-              const label = `${yLabel[y]}${x+1}`;
-              return <text key={i} fontSize={0.4} fill='#777' textAnchor='middle' transform={`translate(${-x+8.5},${y+0.65})`}>{label}</text>
-            })
-          )
-        }
-
-        {
-          Array.from(position.entries()).map(([key, [type, color]]) => {
-            const i = key.substring(0, 1);
-            const j = key.substring(1);
-
-            const y = yLabel.findIndex(value => value === i);
-            const x = 8 - (Number(j) - 1);
-
-            return <PieceSvg key={key} {...{type, x, y, first: color === 'B', scale, onClick}} />
+          Array.from(position.entries()).map(([index, [type, color]]) => {
+            return <PieceSvg key={index} {...{type, index, color, scale, onClick, selected: selectedIndex === index}} />
           })
         }
 
+        { ptr && <CandidatesSvg {...{...ptr, position, onClick: handleMove}} /> }
+
+        <Grid size={gridSize} scale={scale} />
       </g>
     </svg>
   );

@@ -3,7 +3,7 @@ import { Button, Container, Divider, Heading, Text } from '@chakra-ui/react'
 
 import Head from 'next/head'
 
-import { InitialPosition } from '../data/data';
+import { InitialPosition } from '../record/data';
 import { BoardSvg } from '../libs/components/BoardSvg'
 import { VisibilityOption, VisibilityOptions } from '../libs/VisibilityOption';
 
