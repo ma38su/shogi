@@ -35,7 +35,7 @@ const Grid = React.memo(function Grid(props: {size: number, scale: number}) {
 type PiecePtr = {
   index: number,
   piece: PieceType,
-  color: PlayerTurn,
+  turn: PlayerTurn,
 };
 
 type Props = {
@@ -70,7 +70,7 @@ function BoardSvg(props: Props) {
     setPtr({
       index: (x * 9) + y,
       piece: type,
-      color: turn,
+      turn: turn,
     });
   }, [game]);
 

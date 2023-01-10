@@ -3,7 +3,7 @@ import { createRectanglePolygon, XY, XYArray } from "../geometry";
 import { PieceType, PlayerTurn, xyToIndex } from "../shogi";
 import { polylineToPoints } from "../svg";
 
-function filterCandidates(x0: number, y0: number, color: PlayerTurn, position: Map<number, [PieceType, PlayerTurn]>, list: XYArray) {
+function filterCandidates(x0: number, y0: number, turn: PlayerTurn, position: Map<number, [PieceType, PlayerTurn]>, list: XYArray) {
     const candidates: XY[] = [];
     for (const xy of list) {
       const [dx, dy] = xy;
@@ -16,7 +16,7 @@ function filterCandidates(x0: number, y0: number, color: PlayerTurn, position: M
       const index = xyToIndex(x, y);
       const state = position.get(index);
       if (state != null) {
-        if (color !== state[1]) {
+        if (turn !== state[1]) {
           candidates.push(xy);
         }
         break;
@@ -30,10 +30,10 @@ function filterCandidates(x0: number, y0: number, color: PlayerTurn, position: M
     x: number,
     y: number,
     piece: PieceType,
-    color: PlayerTurn,
+    turn: PlayerTurn,
     candidates: XYArray,
     position: Map<number, [PieceType, PlayerTurn]>,
-    onClick: (x: number, y: number, color: PlayerTurn, type: PieceType) => void
+    onClick: (x: number, y: number, turn: PlayerTurn, type: PieceType) => void
   };
 
   const CandidateLineSvg = React.memo(function CandidateLineSvg(props: SubProps) {
@@ -41,7 +41,7 @@ function filterCandidates(x0: number, y0: number, color: PlayerTurn, position: M
       x: x0,
       y: y0,
       piece,
-      color,
+      turn,
       position,
       candidates,
       onClick,
@@ -50,13 +50,13 @@ function filterCandidates(x0: number, y0: number, color: PlayerTurn, position: M
     return (
       <>
       {
-        filterCandidates(x0, y0, color, position, candidates)
+        filterCandidates(x0, y0, turn, position, candidates)
           .map(([dx, dy], i) => {
             const x = x0 + dx;
             const y = y0 + dy;
   
             const handleClick = function() {
-              onClick(x, y, color, piece);
+              onClick(x, y, turn, piece);
             };
             return (
               <g key={`${x}${y}`} transform={`translate(${8-x},${y})`} onClick={handleClick}>

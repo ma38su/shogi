@@ -21,7 +21,7 @@ type Props = {
   turn: PlayerTurn,
   scale: number,
   selected: boolean,
-  onClick: (x: number, y: number, color: PlayerTurn, type: PieceType) => void
+  onClick: (x: number, y: number, turn: PlayerTurn, type: PieceType) => void
 };
 
 const PieceSvg = React.memo(function PieceSvg(props: Props) {
