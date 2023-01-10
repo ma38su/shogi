@@ -7,7 +7,8 @@ type Props = {
   piece: PieceType,
   turn: PlayerTurn,
   position: Map<number, [PieceType, PlayerTurn]>,
-  onClick: (x: number, y: number, turn: PlayerTurn, type: PieceType) => void
+  visible: boolean,
+  onClick: (x: number, y: number, turn: PlayerTurn) => void
 };
 
 const CandidatesSvg = React.memo(function CandidatesSvg(props: Props) {
@@ -16,6 +17,7 @@ const CandidatesSvg = React.memo(function CandidatesSvg(props: Props) {
     piece,
     turn,
     position,
+    visible,
     onClick,
   } = props;
 
@@ -27,7 +29,7 @@ const CandidatesSvg = React.memo(function CandidatesSvg(props: Props) {
     <>
       {
         candidates
-          .map((list, i) => <CandidateLineSvg key={i} x={x} y={y} piece={piece} candidates={list} turn={turn} position={position} onClick={onClick} />)
+          .map((line, i) => <CandidateLineSvg key={i} {...{x, y, candidates: line, turn, position, onClick, visible}} />)
       }
     </>
   );

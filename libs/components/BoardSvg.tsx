@@ -27,12 +27,12 @@ const YLabel = React.memo(function YLabel() {
   )
 });
 
-const Grid = React.memo(function Grid(props: {size: number, scale: number}) {
+const BoardGrid = React.memo(function Grid(props: {size: number, scale: number}) {
   const { size, scale } = props;
   return <path d={generateGrid(9, 9, size)} strokeWidth={1/scale} stroke='#888' fill='none' />
 });
 
-type PiecePtr = {
+type PieceSelection = {
   index: number,
   piece: PieceType,
   turn: PlayerTurn,
@@ -63,41 +63,72 @@ function BoardSvg(props: Props) {
   const width = boardWidth * scale + margin * 2 + widthGuide;
   const height = boardHeight * scale + margin * 2 + heightGuide;
 
-  const [ptr, setPtr] = React.useState<PiecePtr | null>(null);
+  const [selection, setSelection] = React.useState<PieceSelection | null>(null);
 
   const onClick = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn, type: PieceType) {
     if (turn !== game.turn) return;
-    setPtr({
-      index: (x * 9) + y,
-      piece: type,
-      turn: turn,
+
+    const index = xyToIndex(x, y);
+    setSelection(prev => {
+      if (prev?.index === index) return null;
+
+      return {
+        index: xyToIndex(x, y),
+        piece: type,
+        turn,
+      } satisfies PieceSelection;
     });
   }, [game]);
 
-  const handleMove = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn, type: PieceType) {
-    if (!ptr) throw new Error();
-
-    const index1 = xyToIndex(x, y);
-    const { index, piece } = ptr;
-    const { position } = game;
-    position.delete(index);
-    position.set(index1, [piece, turn]);
+  const handleMove = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn) {
+    if (!selection) throw new Error();
 
     setGame((prev: Game) => {
+
+      const nextIndex = xyToIndex(x, y);
+      const { index, piece } = selection;
+      const { position, pieceInHand: [bPieceInHand, wPieceInHand] } = prev;
+      
+      const captured = position.get(nextIndex);
+      console.log('move!!', { index, piece});
+      if (captured != null) {
+        const [capturedType, capturedTurn] = captured;
+        if (turn === capturedTurn) throw new Error();
+ 
+        if (turn) {
+          const prevCount = bPieceInHand.get(capturedType) ?? 0;
+          bPieceInHand.set(capturedType, prevCount + 1);
+        } else {
+          const prevCount = wPieceInHand.get(capturedType) ?? 0;
+          wPieceInHand.set(capturedType, prevCount + 1);
+        }
+      }
+
+      const pieceInHand = [new Map(bPieceInHand), new Map(wPieceInHand)];
+
+      console.log(pieceInHand);
+  
+      position.delete(index);
+      position.set(nextIndex, [piece, turn]);
+
       return {
         turn: !prev.turn,
+        move: prev.move + 1,
         position: new Map(position),
+        pieceInHand: [new Map(bPieceInHand), new Map(wPieceInHand)],
       } satisfies Game;
     });
-  }, [ptr, game, setGame]);
+  }, [selection, setGame]);
 
-  const selectedIndex = ptr?.index;
+  const selectedIndex = selection?.index;
 
   const { position } = game;
 
   React.useEffect(() => {
-    setPtr(null);
+    setSelection(null);
   }, [game]);
+
+  const candidatesVisible = visibilityOptions?.includes('移動範囲') ?? false;
 
   return (
     <svg {...{width, height}} className='disable-select'>
@@ -114,9 +145,9 @@ function BoardSvg(props: Props) {
           })
         }
 
-        { ptr && <CandidatesSvg {...{...ptr, position, onClick: handleMove}} /> }
+        { selection && <CandidatesSvg {...{...selection, position, onClick: handleMove, visible: candidatesVisible}} /> }
 
-        <Grid size={gridSize} scale={scale} />
+        <BoardGrid size={gridSize} scale={scale} />
       </g>
     </svg>
   );

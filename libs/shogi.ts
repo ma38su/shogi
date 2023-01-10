@@ -141,6 +141,8 @@ function xyToIndex(x: number, y: number) {
 
 type Game = {
   position: Map<number, [PieceType, PlayerTurn]>,
+  pieceInHand: [Map<PieceType, number>, Map<PieceType, number>],
+  move: number,
   turn: PlayerTurn,
 }
   

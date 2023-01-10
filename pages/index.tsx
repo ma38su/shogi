@@ -1,15 +1,28 @@
 import React from 'react';
-import { Button, Container, Divider, Heading, Text } from '@chakra-ui/react'
+import { Box, Button, Container, Divider, Heading, Stack, Text } from '@chakra-ui/react'
 
 import Head from 'next/head'
 
 import { InitialPosition } from '../record/data';
 import { BoardSvg } from '../libs/components/BoardSvg'
 import { VisibilityOption, VisibilityOptions } from '../libs/VisibilityOption';
+import { Game, PieceType } from '../libs/shogi';
+import { PieceStand } from '../libs/components/PieceStand';
 
+function newGame(): Game {
+  return {
+    turn: true,
+    move: 0,
+    pieceInHand: [
+      new Map<PieceType, number>(),
+      new Map<PieceType, number>(),
+    ],
+    position: new Map(InitialPosition),
+  } satisfies Game;
+}
 
 export default function Home() {
-  const [visibilityOptions, setVisibilityOptions] = React.useState<VisibilityOption[]>([]);
+  const [visibilityOptions, setVisibilityOptions] = React.useState<VisibilityOption[]>(['移動範囲']);
 
   const handleVisibilityOptionChange = (option: VisibilityOption) => {
     const state = visibilityOptions.includes(option);
@@ -20,44 +33,57 @@ export default function Home() {
     }
   }
 
-  const [game, setGame] = React.useState({turn: true, position: InitialPosition});
+  const [game, setGame] = React.useState<Game>(newGame());
   const handleResetPosition = () => {
-    setGame(_ => ({
-      turn: true,
-      position: new Map(InitialPosition),
-    }));
+    setGame(_ => newGame());
   };
 
-  const { turn } = game;
+  const { turn, move, pieceInHand: [bPieceOfHand, wPieceOfHand] } = game;
   return (
     <>
       <Head>
         <title>Shogi38</title>
-        <meta name="description" content="Prototype Shogi AI" />
+        <meta name="description" content="Shogi Board Prototype" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <Container>
 
         <Heading>Shogi38</Heading>
-        <Text>Prototype Shogi AI</Text>
+        <Text>Shogi Board Prototype</Text>
 
         <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
 
         <BoardSvg game={game} setGame={setGame} visibilityOptions={visibilityOptions} />
 
-        <Button colorScheme='red' onClick={handleResetPosition}>Reset</Button>
+        <Text>{move+1}手目 {turn ? '先手' : '後手'}番</Text>
 
+        <Stack direction='row'>
+          <Box width={90}>
+            <Text>先手</Text>
+            <PieceStand pieceInHand={bPieceOfHand}/>
+          </Box>
+          <Box width={90}>
+            <Text>後手</Text>
+            <PieceStand pieceInHand={wPieceOfHand}/>
+          </Box>
+          <Button colorScheme='red' onClick={handleResetPosition}>投了</Button>
+        </Stack>
+
+        <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
+
+        <Stack direction='row'>
+        <Text>表示</Text>
         {
           VisibilityOptions.map((option) => {
             return (
-              <Button key={option} colorScheme={visibilityOptions.includes(option) ? 'blue' : 'gray'} onClick={() => handleVisibilityOptionChange(option)}>
+              <Button key={option} colorScheme={visibilityOptions.includes(option) ? 'green' : 'blackAlpha'} onClick={() => handleVisibilityOptionChange(option)}>
                 {option}
               </Button>
             )
           })
         }
+        </Stack>
 
-        <Text>{turn ? '先手' : '後手'}</Text>
       </Container>
     </>
   )
