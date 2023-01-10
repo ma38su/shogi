@@ -1,10 +1,24 @@
+import React from 'react';
+import { Button, Container, Divider, Heading, Text } from '@chakra-ui/react'
+
 import Head from 'next/head'
-import { Container, Divider, Heading, Text } from '@chakra-ui/react'
 
 import { InitialPosition } from '../data/data';
 import { BoardSvg } from '../libs/components/BoardSvg'
+import { VisibilityOption, VisibilityOptions } from '../libs/VisibilityOption';
 
 export default function Home() {
+  const [visibilityOptions, setVisibilityOptions] = React.useState<VisibilityOption[]>([]);
+
+  const handleVisibilityOptionChange = (option: VisibilityOption) => {
+    const state = visibilityOptions.includes(option);
+    if (state) {
+      setVisibilityOptions(visibilityOptions.filter(op => op !== option));
+    } else {
+      setVisibilityOptions([...visibilityOptions, option]);
+    }
+  }
+
   return (
     <>
       <Head>
@@ -19,7 +33,17 @@ export default function Home() {
 
         <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
 
-        <BoardSvg position={InitialPosition} visibilityOptions={['Index']} />
+        <BoardSvg position={InitialPosition} visibilityOptions={visibilityOptions} />
+
+        {
+          VisibilityOptions.map((option) => {
+            return (
+              <Button key={option} colorScheme={visibilityOptions.includes(option) ? 'blue' : 'gray'} onClick={() => handleVisibilityOptionChange(option)}>
+                {option}
+              </Button>
+            )
+          })
+        }
       </Container>
     </>
   )

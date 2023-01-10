@@ -1,6 +1,8 @@
 import React from "react";
+import { XYArray } from "../geometry";
 import { Color, PieceType } from "../shogi";
 import { generateGrid, polylinesToPath, polylineToPoints } from "../svg";
+import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvg } from "./PieceSvg";
 
 const yLabel = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
@@ -26,16 +28,27 @@ const YLabel = React.memo(function YLabel() {
   )
 });
 
-type VisibilityOption = 'Index';
-
 type Props = {
   position: Map<string, [PieceType, Color]>,
   visibilityOptions?: VisibilityOption[],
 };
 
-const indexList: number[] = [];
-for (let i = 0; i < 81; ++i) {
-  indexList.push(i);
+
+function range(start: number, end: number): number[] {
+  const list: number[] = [];
+  for (let i = start; i < end; ++i) {
+    list.push(i);
+  }
+  return list;
+}
+
+function createRectangle(width: number, height: number): XYArray {
+  return [
+    [0, 0],
+    [width, 0],
+    [width, height],
+    [0, height]
+  ];
 }
 
 function BoardSvg(props: Props) {
@@ -46,8 +59,11 @@ function BoardSvg(props: Props) {
   const scale = 40;
   const widthGuide = 30;
   const heightGuide = 30;
-  const width = (9 * gridSize)*scale + margin * 2 + widthGuide;
-  const height = (9 * gridSize)*scale + margin * 2 + heightGuide;
+  const boardWidth = (9 * gridSize);
+  const boardHeight = (9 * gridSize);
+
+  const width = boardWidth * scale + margin * 2 + widthGuide;
+  const height = boardHeight * scale + margin * 2 + heightGuide;
 
   const onClick = (x: number, y: number, color: Color, type: PieceType) => {
     console.log({x, y, color, type});
@@ -60,18 +76,21 @@ function BoardSvg(props: Props) {
 
         <XLabel />
         <YLabel />
+
+        <polygon points={polylineToPoints(createRectangle(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
+        <path d={generateGrid(9, 9, gridSize)} strokeWidth={1/scale} stroke='#888' fill='none' />
+
         {
           visibilityOptions?.includes('Index') && (
             // index
-            indexList.map((n, i) => {
+            range(0, 81).map((i) => {
               const y = i % 9;
               const x = Math.floor(i/9);
-              return <text key={n} fontSize={0.4} fill='#ccc' textAnchor='middle' transform={`translate(${8.5-x},${y+0.65})`}>{yLabel[y]}{x+1}</text>
+              const label = `${yLabel[y]}${x+1}`;
+              return <text key={i} fontSize={0.4} fill='#777' textAnchor='middle' transform={`translate(${-x+8.5},${y+0.65})`}>{label}</text>
             })
           )
         }
-
-        <path d={generateGrid(9, 9, gridSize)} strokeWidth={1/scale} stroke='#888' fill='none' />
 
         {
           Array.from(position.entries()).map(([key, [type, color]]) => {
@@ -84,6 +103,7 @@ function BoardSvg(props: Props) {
             return <PieceSvg key={key} {...{type, x, y, first: color === 'B', scale, onClick}} />
           })
         }
+
       </g>
     </svg>
   );
