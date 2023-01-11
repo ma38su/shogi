@@ -1,9 +1,9 @@
 import React from "react";
 import { createRectanglePolygon } from "../geometry";
-import { PlayerTurn, PieceType, xyToIndex, Game } from "../shogi";
+import { PlayerTurn, PieceType, xyToIndex, Game, promote, GameRecord, yToLabel } from "../shogi";
 import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
-import { PieceSvg } from "./PieceSvg";
+import { PieceSvgGroup } from "./PieceSvgGroup";
 import { CandidatesSvg } from "./CandidatesSvg";
 
 const XLabel = React.memo(function XLabel() {
@@ -20,8 +20,8 @@ const YLabel = React.memo(function YLabel() {
   return (
     <>
     {
-      ['一', '二', '三', '四', '五', '六', '七', '八', '九']
-        .map((n, i) => <text key={n} fontSize={0.4} textAnchor='middle' transform={`translate(${9.5},${i+0.7})`}>{n}</text>)
+      [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        .map((n, i) => <text key={n} fontSize={0.4} textAnchor='middle' transform={`translate(${9.5},${i+0.7})`}>{yToLabel(n)}</text>)
     }
     </>
   )
@@ -87,10 +87,13 @@ function BoardSvg(props: Props) {
 
       const nextIndex = xyToIndex(x, y);
       const { index, piece } = selection;
-      const { position, pieceInHand: [bPieceInHand, wPieceInHand] } = prev;
+      const {
+        position,
+        pieceInHand: [bPieceInHand, wPieceInHand],
+        records
+      } = prev;
       
       const captured = position.get(nextIndex);
-      console.log('move!!', { index, piece});
       if (captured != null) {
         const [capturedType, capturedTurn] = captured;
         if (turn === capturedTurn) throw new Error();
@@ -103,19 +106,26 @@ function BoardSvg(props: Props) {
           wPieceInHand.set(capturedType, prevCount + 1);
         }
       }
-
-      const pieceInHand = [new Map(bPieceInHand), new Map(wPieceInHand)];
-
-      console.log(pieceInHand);
-  
+ 
       position.delete(index);
       position.set(nextIndex, [piece, turn]);
 
+      const nextMove = prev.move + 1;
+
+      const newRecord: GameRecord = {
+        x,
+        y,
+        turn,
+        piece,
+        move: nextMove,
+      };
+
       return {
         turn: !prev.turn,
-        move: prev.move + 1,
+        move: nextMove,
         position: new Map(position),
         pieceInHand: [new Map(bPieceInHand), new Map(wPieceInHand)],
+        records: [...records, newRecord],
       } satisfies Game;
     });
   }, [selection, setGame]);
@@ -141,7 +151,7 @@ function BoardSvg(props: Props) {
 
         {
           Array.from(position.entries()).map(([index, [type, turn]]) => {
-            return <PieceSvg key={index} {...{type, index, turn: turn, scale, onClick, selected: selectedIndex === index}} />
+            return <PieceSvgGroup key={index} {...{type, index, turn: turn, scale, onClick, selected: selectedIndex === index}} />
           })
         }
 

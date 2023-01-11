@@ -19,7 +19,7 @@ const GridAngleLabels: Map<GridAngle, string> = new Map([
 
 type GridAngle = typeof GridAngles[number];
 
-type XY = [number, number];
+type XY = readonly [number, number];
 type XYArray = readonly XY[];
 type Triangle = [XY, XY, XY];
 

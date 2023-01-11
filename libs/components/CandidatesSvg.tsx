@@ -1,5 +1,5 @@
 import React from "react";
-import { PlayerTurn, PieceType, getMoveCandidateList } from "../shogi";
+import { PlayerTurn, PieceType, getMoveRangeList } from "../shogi";
 import { CandidateLineSvg } from "./CandidateLineSvg";
 
 type Props = {
@@ -23,7 +23,7 @@ const CandidatesSvg = React.memo(function CandidatesSvg(props: Props) {
 
   const x = Math.floor(index / 9);
   const y = index % 9;
-  const candidates = getMoveCandidateList(piece, turn);
+  const candidates = getMoveRangeList(piece, turn);
 
   return (
     <>
