@@ -205,8 +205,7 @@ function searchKingIndex(position: Map<number, PiecePosition>, turn: PlayerTurn)
 }
 
 /** 王手 */
-function isCheck(game: Game, turn0: PlayerTurn): boolean {
-  const { position } = game;
+function isCheck(position: Map<number, PiecePosition>, turn0: PlayerTurn): boolean {
 
   const [kingX, kingY] = searchKingIndex(position, !turn0);
   for (const [index, {type: piece, turn}] of position) {
@@ -241,8 +240,8 @@ function isCheck(game: Game, turn0: PlayerTurn): boolean {
  * TODO 詰みの判定
  */
 function isCheckmate(game: Game): boolean {
-  const { turn } = game;
-  return isCheck(game, turn);
+  const { position, turn } = game;
+  return isCheck(position, turn);
 }
 
 type PieceSelection = InHandPieceSelection | BoardPieceSelection;

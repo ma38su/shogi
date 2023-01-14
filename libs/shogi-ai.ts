@@ -1,5 +1,5 @@
 import { xyToLabel } from "./components/GameRecordList";
-import { Game, GameRecord, getMoveRangeList, indexToXY, isPromotable, movePiece, PiecePosition, PieceSelection, PieceType, PlayerTurn, promote, updatePromotion, xyToIndex } from "./shogi";
+import { Game, GameRecord, getMoveRangeList, indexToXY, isCheck, isPromotable, movePiece, PiecePosition, PieceSelection, PieceType, PlayerTurn, promote, updatePromotion, xyToIndex } from "./shogi";
 
 type PlayerMode = 'Player' | 'AI';
 
@@ -14,8 +14,23 @@ function choiceRandom<T>(array: readonly T[]) {
 
 function calculateNextMove(game: Game) {
   const moveCandidates = generateNextMoveCandidates(game);
-  const nextMove = choiceRandom(moveCandidates);
-  return nextMove;
+
+  const { position, turn } = game;
+
+  const noChecked = moveCandidates.filter(candidate => !isChecked(position, candidate, turn));
+  if (noChecked.length > 0) {
+    const checkCandidate = noChecked.filter(candidate => isChecked(position, candidate, !turn));
+    if (checkCandidate.length > 0) {
+      const nextMove = choiceRandom(checkCandidate);
+      return nextMove;
+    }
+
+    const nextMove = choiceRandom(noChecked);
+    return nextMove;
+  } else {
+    const nextMove = choiceRandom(moveCandidates);
+    return nextMove;
+  }
 }
 
 function moveNextByAi(game: Game) {
@@ -47,8 +62,8 @@ function moveNextByAi(game: Game) {
 function generateNextMoveCandidates(game: Game): [PieceType, number, number][] {
 
   const { position, turn } = game;
-  const results: [PieceType, number, number][] = [];
 
+  const results: [PieceType, number, number][] = [];
   for (const [index, piecePosition] of position) {
     const { type: pieceType, turn: pieceTurn } = piecePosition;
     if (turn !== pieceTurn) {
@@ -76,6 +91,7 @@ function generateNextMoveCandidates(game: Game): [PieceType, number, number][] {
           }
           break;
         }
+
         results.push([pieceType, index, index1]);
       }
     }
@@ -83,5 +99,15 @@ function generateNextMoveCandidates(game: Game): [PieceType, number, number][] {
   return results;
 }
 
+function isChecked(position: Map<number, PiecePosition>, candidate: [PieceType, number, number], turn: boolean) {
+  const [pieceType, prevIndex, nextIndex] = candidate;
+
+  const candidatePosition = new Map(position);
+  candidatePosition.delete(prevIndex);
+  candidatePosition.set(nextIndex, { type: pieceType, turn });
+  
+  return isCheck(candidatePosition, !turn);
+}
+
 export type { PlayerMode };
-export { calculateNextMove, moveNextByAi };
+export { calculateNextMove, moveNextByAi, isChecked };

@@ -45,7 +45,7 @@ export default function Home() {
   const [game, setGame] = React.useState<Game>(newGame());
   const handleResetGame = () => setGame(newGame());
 
-  const { turn, move, records } = game;
+  const { position, turn, move, records } = game;
 
   const lastRecord = records.length > 0 ? records[records.length - 1] : null;
 
@@ -93,9 +93,7 @@ export default function Home() {
 
   const isCheckmated = isCheckmate(game);
   const promotionDialogVisible = isPromotable(lastRecord);
-  const checkDialogVisible = !promotionDialogVisible && !isCheckmated && !checkAlertChecked && isCheck(game, !turn);
-
-  const [senteAi, goteAi] = playersMode;
+  const checkDialogVisible = !promotionDialogVisible && !isCheckmated && !checkAlertChecked && isCheck(position, !turn);
 
   return (
     <>
