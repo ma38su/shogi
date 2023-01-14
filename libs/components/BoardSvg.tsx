@@ -5,7 +5,7 @@ import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvgGroup } from "./PieceSvgGroup";
 import { CandidatesSvg } from "./CandidatesSvg";
-import { Box, Flex, Stack, Text } from "@chakra-ui/react";
+import { Stack, Text, Wrap, WrapItem } from "@chakra-ui/react";
 import { PieceStand } from "./PieceStand";
 
 const XLabel = React.memo(function XLabel() {
@@ -104,41 +104,41 @@ function ShogiBoardSvg(props: Props) {
 
   const standColor = '#C49958';
   return (
-    <Stack direction='row'>
-      <Flex alignItems='start'>
+    <Wrap spacing='10px' justify='center'>
+      <WrapItem alignItems='start'>
         <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
           <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece} />
           <Text>後手</Text>
         </Stack>
-      </Flex>
+      </WrapItem>
+      <WrapItem>
+        <svg {...{width, height}} className='disable-select'>
+          <g transform={`translate(${margin},${margin+heightGuide}) scale(${scale},${scale})`}>
 
-      <svg {...{width, height}} className='disable-select'>
-        <g transform={`translate(${margin},${margin+heightGuide}) scale(${scale},${scale})`}>
+            <XLabel />
+            <YLabel />
 
-          <XLabel />
-          <YLabel />
+            <polygon points={polylineToPoints(createRectanglePolygon(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
 
-          <polygon points={polylineToPoints(createRectanglePolygon(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
+            {
+              Array.from(position.entries()).map(([index, {type, turn}]) => {
+                return <PieceSvgGroup key={index} {...{type, index, turn, scale, onClick: handleSelect, selected: selectedIndex === index}} />
+              })
+            }
 
-          {
-            Array.from(position.entries()).map(([index, {type, turn}]) => {
-              return <PieceSvgGroup key={index} {...{type, index, turn, scale, onClick: handleSelect, selected: selectedIndex === index}} />
-            })
-          }
+            { (selection && selection.index != null) && <CandidatesSvg {...{...selection, position, onClick: handleMove, visible: candidatesVisible}} /> }
 
-          { (selection && selection.index != null) && <CandidatesSvg {...{...selection, position, onClick: handleMove, visible: candidatesVisible}} /> }
-
-          <BoardGrid size={gridSize} scale={scale} />
-        </g>
-      </svg>
-
-      <Flex alignItems='end'>
+            <BoardGrid size={gridSize} scale={scale} />
+          </g>
+        </svg>
+      </WrapItem>
+      <WrapItem alignItems='end'>
         <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
           <Text>先手</Text>
           <PieceStand pieceInHand={bPieceOfHand} turn={true} disabled={!game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece}/>
         </Stack>
-      </Flex>
-    </Stack>
+      </WrapItem>
+    </Wrap>
   );
 }
 
