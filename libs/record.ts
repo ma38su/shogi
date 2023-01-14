@@ -1,4 +1,6 @@
-import { PlayerTurn as PlayerTurn, PieceType } from "../libs/shogi";
+import { PieceType, PiecePosition } from "./shogi";
+
+type PlayerColor = 'B' | 'W';
 
 const keyLabel = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 
@@ -11,20 +13,18 @@ function toIndex(key: string) {
   return (x * 9) + y;
 }
 
-function toMap(data: { [key: string]: [PieceType, PlayerColor0]}) {
-    const map = new Map<number, [PieceType, PlayerTurn]>();
+function toMap(data: { [key: string]: [PieceType, PlayerColor]}) {
+    const map = new Map<number, PiecePosition>();
     for (const key of Object.keys(data)) {
       const [ type, color ] = data[key];
       const i = toIndex(key)
-      map.set(i, [type, color === 'B']);
+      map.set(i, {type, turn: color === 'B'} satisfies PiecePosition);
     }
     return map;
 }
 
-type PlayerColor0 = 'B' | 'W';
-
 /** 初期配置 */
-const InitialPosition: Map<number, [PieceType, PlayerTurn]> = toMap({
+const InitialPosition: Map<number, PiecePosition> = toMap({
     'A1': ['香', 'W'],
     'A2': ['桂', 'W'],
     'A3': ['銀', 'W'],

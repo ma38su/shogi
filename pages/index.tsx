@@ -1,17 +1,16 @@
 import React from 'react';
-import { Box, Button, Container, Divider, Heading, Stack, Text } from '@chakra-ui/react'
-
+import { Box, Button, Center, Container, Divider, Heading, position, Stack, Text } from '@chakra-ui/react'
 import Head from 'next/head'
 
-import { InitialPosition } from '../record/data';
-import { BoardSvg } from '../libs/components/BoardSvg'
+import { InitialPosition } from '../libs/record';
+import { ShogiBoardSvg } from '../libs/components/BoardSvg'
 import { VisibilityOption, VisibilityOptions } from '../libs/VisibilityOption';
-import { Game, GameRecord, isCheck, isCheckmate, isPromotable, PieceType, PlayerTurn, promote, xToLabel, xyToIndex, yToLabel } from '../libs/shogi';
-import { PieceStand } from '../libs/components/PieceStand';
+import { Game, GameRecord, indexToXY, isCheck, isCheckmate, isPromotable, movePiece, PiecePosition, PieceSelection, PieceType, promote, updatePromotion, xyToIndex } from '../libs/shogi';
 import { PromotionDialog } from '../libs/components/PromotionDialog';
-import { GameRecordList } from '../libs/components/GameRecordList';
+import { GameRecordList, xyToLabel } from '../libs/components/GameRecordList';
 import { CheckAlertDialog } from '../libs/components/CheckAlertDialog';
 import { CheckmateDialog } from '../libs/components/CheckmateDialog';
+import { calculateNextMove, moveNextByAi } from '../libs/shogi-ai';
 
 function newGame(): Game {
   return {
@@ -26,24 +25,12 @@ function newGame(): Game {
   } satisfies Game;
 }
 
-function updatePromotion(lastRecord: GameRecord, position: Map<number, [PieceType, PlayerTurn]>): Map<number, [PieceType, PlayerTurn]> {
-  const { x, y, piece, turn, behavior } = lastRecord;
-  if (behavior !== '成') {
-    return position;
-  }
-
-  const index = xyToIndex(x, y);
-  const promotedPiece = promote(piece);
-  if (promotedPiece == null) throw new Error();
-  position.set(index, [promotedPiece, turn]);
-  return new Map(position);
-}
-
-
 export default function Home() {
   const [visibilityOptions, setVisibilityOptions] = React.useState<VisibilityOption[]>(['移動範囲']);
 
   const [checkAlertChecked, setCheckAlertChecked] = React.useState<boolean>(false);
+
+  const [aiTurn, setAiTurn] = React.useState<[boolean, boolean]>([false, true]);
 
   const handleVisibilityOptionChange = (option: VisibilityOption) => {
     const state = visibilityOptions.includes(option);
@@ -55,22 +42,9 @@ export default function Home() {
   }
 
   const [game, setGame] = React.useState<Game>(newGame());
-  const handleResetGame = () => {
-    setGame(_ => newGame());
-  };
+  const handleResetGame = () => setGame(newGame());
 
-  const [selectedPiece, setSelectedPiece] = React.useState<PieceType | null>(null);
-
-  const handleDropPiece = (type: PieceType, turn: PlayerTurn) => {
-    if (turn !== game.turn) {
-      return;
-    }
-
-    console.log(type);
-    setSelectedPiece(type);
-  };
-
-  const { turn, move, pieceInHand: [bPieceOfHand, wPieceOfHand], records } = game;
+  const { turn, move, records } = game;
 
   const lastRecord = records.length > 0 ? records[records.length - 1] : null;
 
@@ -85,7 +59,6 @@ export default function Home() {
       } satisfies GameRecord;
 
       const newPosition = updatePromotion(lastRecord, position);
-
       return {
         ...prev,
         position: newPosition,
@@ -95,21 +68,34 @@ export default function Home() {
   }
 
   React.useEffect(() => {
-    setCheckAlertChecked(false);
-  }, [game]);
+    const [ senteAi, goteAi ] = aiTurn;
+    const { turn, records } = game;
+    if (!(senteAi && turn) || (goteAi && !turn)) {
+      setCheckAlertChecked(false);
+    }
+
+    // AI処理
+    const lastRecord = records.length > 0 ? records[records.length - 1] : null;
+    if (isCheckmate(game)) {
+      // 詰んでいる場合は処理しない
+      return;
+    }
+    if (!isPromotable(lastRecord) || checkAlertChecked) {
+      if ((senteAi && turn) || (goteAi && !turn)) {
+        setGame(prev => moveNextByAi(prev));
+      }
+    }
+  }, [game, aiTurn, checkAlertChecked]);
 
   const isCheckmated = isCheckmate(game);
   const promotionDialogVisible = isPromotable(lastRecord);
   const checkDialogVisible = !promotionDialogVisible && !isCheckmated && !checkAlertChecked && isCheck(game, !turn);
 
-  console.log('check', {
-    my: isCheck(game, turn),
-    opponent: isCheck(game, !turn),
+  const [senteAi, goteAi] = aiTurn;
+  const handleChangeAiSente = React.useCallback(() => setAiTurn(([sente, gote]) => [!sente, gote]), []);
+  const handleChangeAiGote = React.useCallback(() => setAiTurn(([sente, gote]) => [sente, !gote]), []);
 
-    a: !promotionDialogVisible,
-    b: !isCheckmated,
-    c: !checkAlertChecked,
-  })
+  console.log({promotionDialogVisible});
 
   return (
     <>
@@ -118,7 +104,7 @@ export default function Home() {
         <meta name="description" content="Shogi Board Prototype" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <Container>
+      <Container maxWidth='40em'>
 
         { isCheckmated && <CheckmateDialog game={game} handleReset={handleResetGame} /> }
         { promotionDialogVisible && lastRecord && <PromotionDialog handlePromotion={handlePromotion} lastRecord={lastRecord} /> }
@@ -129,37 +115,33 @@ export default function Home() {
 
         <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
 
-        <BoardSvg game={game} setGame={setGame} visibilityOptions={visibilityOptions} />
+        <ShogiBoardSvg game={game} setGame={setGame} visibilityOptions={visibilityOptions} />
 
-        <Text>{move+1}手目 {turn ? '先手' : '後手'}番</Text>
-
-        <Stack direction='row'>
-          <Box width={90}>
-            <Text>先手</Text>
-            <PieceStand pieceInHand={bPieceOfHand} turn={true} disabled={!game.turn} selected={false} handleDropPiece={handleDropPiece}/>
-          </Box>
-          <Box width={90}>
-            <Text>後手</Text>
-            <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selected={false} handleDropPiece={handleDropPiece} />
-          </Box>
-          <Button colorScheme='red' onClick={handleResetGame}>投了</Button>
-        </Stack>
+        <Center>
+          <Stack>
+            <Text>{move+1}手目 {turn ? '先手' : '後手'}番</Text>
+            <Box>
+              <Button colorScheme={senteAi ? 'blue' : 'gray'} onClick={handleChangeAiSente}>先手AI</Button>
+              <Button colorScheme={goteAi ? 'blue' : 'gray'} onClick={handleChangeAiGote}>後手AI</Button>
+            </Box>
+            <Button colorScheme='red' onClick={handleResetGame}>投了</Button>
+          </Stack>
+        </Center>
 
         <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
-
-        <Stack direction='row'>
-        <Text>表示</Text>
-        {
-          VisibilityOptions.map((option) => {
-            return (
-              <Button key={option} colorScheme={visibilityOptions.includes(option) ? 'green' : 'blackAlpha'} onClick={() => handleVisibilityOptionChange(option)}>
-                {option}
-              </Button>
-            )
-          })
-        }
-        </Stack>
-
+          <Center>
+            <Stack direction='row'>
+            {
+                VisibilityOptions.map((option) => {
+                  return (
+                    <Button key={option} colorScheme={visibilityOptions.includes(option) ? 'green' : 'blackAlpha'} onClick={() => handleVisibilityOptionChange(option)}>
+                      {option}
+                    </Button>
+                  )
+                })
+              }
+            </Stack>
+          </Center>
         <GameRecordList records={records} />
       </Container>
     </>

@@ -1,14 +1,14 @@
 import React from "react";
-import { PlayerTurn, PieceType, getMoveRangeList } from "../shogi";
+import { PlayerTurn, PieceType, getMoveRangeList, PiecePosition } from "../shogi";
 import { CandidateLineSvg } from "./CandidateLineSvg";
 
 type Props = {
   index: number,
   piece: PieceType,
   turn: PlayerTurn,
-  position: Map<number, [PieceType, PlayerTurn]>,
+  position: Map<number, PiecePosition>,
   visible: boolean,
-  onClick: (x: number, y: number, turn: PlayerTurn) => void
+  onClick: (x: number, y: number) => void
 };
 
 const CandidatesSvg = React.memo(function CandidatesSvg(props: Props) {

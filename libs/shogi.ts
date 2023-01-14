@@ -1,3 +1,4 @@
+import { indexToLabel, xyToLabel } from "./components/GameRecordList";
 import { XY, XYArray } from "./geometry";
 
 type PlayerTurn = true | false;
@@ -15,8 +16,13 @@ type GameRecord = {
   behavior?: BehaviorType,  // true: 成り, false: 不成, undefined: 未選択
 }
 
+type PiecePosition = {
+  type: PieceType,
+  turn: boolean,
+}
+
 type Game = {
-  position: Map<number, [PieceType, PlayerTurn]>,
+  position: Map<number, PiecePosition>,
   pieceInHand: [Map<PieceType, number>, Map<PieceType, number>],
   move: number,
   turn: PlayerTurn,
@@ -160,7 +166,7 @@ function promote(type: PieceType) {
   return promoteMap.get(type);
 }
 
-function isPromotable(lastRecord: GameRecord | null | undefined) {
+function isPromotable(lastRecord: GameRecord | null | undefined): lastRecord is GameRecord {
   if (lastRecord == null) return false;
 
   const { piece, y, turn, behavior } = lastRecord;
@@ -189,8 +195,8 @@ function isKind(piece: PieceType) {
   return piece === '王' || piece === '玉';
 }
 
-function searchKingIndex(position: Map<number, [PieceType, PlayerTurn]>, turn: PlayerTurn) {
-  for (const [index, [p, t]] of position) {
+function searchKingIndex(position: Map<number, PiecePosition>, turn: PlayerTurn) {
+  for (const [index, {type: p, turn: t}] of position) {
     if (t === turn && isKind(p)) {
       return indexToXY(index);
     }
@@ -203,8 +209,7 @@ function isCheck(game: Game, turn0: PlayerTurn): boolean {
   const { position } = game;
 
   const [kingX, kingY] = searchKingIndex(position, !turn0);
-  console.log({kingX, kingY, turn0});
-  for (const [index, [piece, turn]] of position) {
+  for (const [index, {type: piece, turn}] of position) {
     if (turn !== turn0) continue;
 
     const [x0, y0] = indexToXY(index);
@@ -214,6 +219,10 @@ function isCheck(game: Game, turn0: PlayerTurn): boolean {
       for (const [dx, dy] of moveRange) {
         const x = x0 + dx;
         const y = y0 + dy;
+        if (x < 0 || x >= 9 || y < 0 || y >= 9) {
+          break;
+        }
+      
         const moveIndex = xyToIndex(x, y);
 
         if (x === kingX && y === kingY) {
@@ -228,10 +237,98 @@ function isCheck(game: Game, turn0: PlayerTurn): boolean {
   return false;
 }
 
+/**
+ * TODO 詰みの判定
+ */
 function isCheckmate(game: Game): boolean {
   const { turn } = game;
   return isCheck(game, turn);
 }
 
-export { CapturablePieceList, isCheck, isCheckmate, getMoveRangeList, xyToIndex, promote, isPromotable, xToLabel, yToLabel }
-export type { PieceType, PlayerTurn, Game, GameRecord }
+type PieceSelection = InHandPieceSelection | BoardPieceSelection;
+
+type BoardPieceSelection = {
+  index: number,
+  piece: PieceType,
+  turn: PlayerTurn,
+};
+
+type InHandPieceSelection = {
+  index: null,
+  piece: PieceType,
+  turn: PlayerTurn,
+};
+
+function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Game {
+  const { index, piece, turn } = selection;
+  const {
+    position,
+    pieceInHand: [sentePieceInHand, gotePieceInHand],
+    records
+  } = game;
+
+  const newPosition = new Map(position);
+  const newSentePieceInHand = new Map(sentePieceInHand);
+  const newGotePieceInHand = new Map(gotePieceInHand);
+
+  const captured = position.get(nextIndex);
+  if (captured != null) {
+    const { type: capturedType, turn: capturedTurn } = captured;
+    if (turn === capturedTurn) {
+      console.log(captured);
+      throw new Error(`${piece}: ${index && indexToLabel(index)} => ${indexToLabel(nextIndex)}`);
+    }
+
+    if (turn) {
+      const prevCount = newSentePieceInHand.get(capturedType) ?? 0;
+      newSentePieceInHand.set(capturedType, prevCount + 1);
+    } else {
+      const prevCount = newGotePieceInHand.get(capturedType) ?? 0;
+      newGotePieceInHand.set(capturedType, prevCount + 1);
+    }
+  }
+
+  if (index != null) {
+    newPosition.delete(index);
+  } else {
+    // in hand piece
+  }
+  newPosition.set(nextIndex, { type: piece, turn } satisfies PiecePosition);
+
+  const nextMove = game.move + 1;
+
+  const [x, y] = indexToXY(nextIndex);
+  const newRecord: GameRecord = {
+    x,
+    y,
+    turn,
+    piece,
+    move: nextMove,
+  }
+  return {
+    turn: !game.turn,
+    move: nextMove,
+    position: newPosition,
+    pieceInHand: [newSentePieceInHand, newGotePieceInHand],
+    records: [...records, newRecord],
+  }
+}
+
+
+function updatePromotion(lastRecord: GameRecord, position: Map<number, PiecePosition>): Map<number, PiecePosition> {
+  const { x, y, piece, turn, behavior } = lastRecord;
+  if (behavior !== '成') {
+    return position;
+  }
+
+  const index = xyToIndex(x, y);
+  const promotedPiece = promote(piece);
+  if (promotedPiece == null) throw new Error();
+
+  const newPosition = new Map(position);
+  newPosition.set(index, { type: promotedPiece, turn });
+  return newPosition;
+}
+
+export { CapturablePieceList, isCheck, isCheckmate, getMoveRangeList, xyToIndex, indexToXY, promote, isPromotable, xToLabel, yToLabel, movePiece, updatePromotion }
+export type { PieceType, PlayerTurn, Game, GameRecord, PiecePosition, PieceSelection }

@@ -1,10 +1,12 @@
 import React from "react";
 import { createRectanglePolygon } from "../geometry";
-import { PlayerTurn, PieceType, xyToIndex, Game, promote, GameRecord, yToLabel } from "../shogi";
+import { PlayerTurn, PieceType, xyToIndex, Game, promote, GameRecord, yToLabel, PiecePosition, PieceSelection, movePiece } from "../shogi";
 import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvgGroup } from "./PieceSvgGroup";
 import { CandidatesSvg } from "./CandidatesSvg";
+import { Box, Flex, Stack, Text } from "@chakra-ui/react";
+import { PieceStand } from "./PieceStand";
 
 const XLabel = React.memo(function XLabel() {
   return (
@@ -32,25 +34,33 @@ const BoardGrid = React.memo(function Grid(props: {size: number, scale: number})
   return <path d={generateGrid(9, 9, size)} strokeWidth={1/scale} stroke='#888' fill='none' />
 });
 
-type PieceSelection = {
-  index: number,
-  piece: PieceType,
-  turn: PlayerTurn,
-};
-
 type Props = {
   game: Game,
   setGame: React.Dispatch<React.SetStateAction<Game>>,
   visibilityOptions?: VisibilityOption[],
 };
 
-function BoardSvg(props: Props) {
+function selectPiece(x: number, y: number, type: PieceType, turn: PlayerTurn, prev: PieceSelection | null) {
+  const index = xyToIndex(x, y);
+  if (prev?.index === index) return null;
+
+  return {
+    index: xyToIndex(x, y),
+    piece: type,
+    turn,
+  } satisfies PieceSelection;
+}
+
+function ShogiBoardSvg(props: Props) {
 
   const {
     game,
     setGame,
     visibilityOptions,
   } = props;
+
+  const standWidth = 100;
+  const standHeight = 150;
 
   const gridSize = 1;
   const margin = 1;
@@ -65,102 +75,71 @@ function BoardSvg(props: Props) {
 
   const [selection, setSelection] = React.useState<PieceSelection | null>(null);
 
-  const onClick = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn, type: PieceType) {
+  const handleSelect = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn, type: PieceType) {
     if (turn !== game.turn) return;
 
-    const index = xyToIndex(x, y);
-    setSelection(prev => {
-      if (prev?.index === index) return null;
-
-      return {
-        index: xyToIndex(x, y),
-        piece: type,
-        turn,
-      } satisfies PieceSelection;
-    });
+    setSelection(prev => selectPiece(x, y, type, turn, prev));
   }, [game]);
 
-  const handleMove = React.useCallback(function onClick(x: number, y: number, turn: PlayerTurn) {
+  const handleMove = React.useCallback(function onClick(x: number, y: number) {
     if (!selection) throw new Error();
-
-    setGame((prev: Game) => {
-
-      const nextIndex = xyToIndex(x, y);
-      const { index, piece } = selection;
-      const {
-        position,
-        pieceInHand: [bPieceInHand, wPieceInHand],
-        records
-      } = prev;
-      
-      const captured = position.get(nextIndex);
-      if (captured != null) {
-        const [capturedType, capturedTurn] = captured;
-        if (turn === capturedTurn) throw new Error();
- 
-        if (turn) {
-          const prevCount = bPieceInHand.get(capturedType) ?? 0;
-          bPieceInHand.set(capturedType, prevCount + 1);
-        } else {
-          const prevCount = wPieceInHand.get(capturedType) ?? 0;
-          wPieceInHand.set(capturedType, prevCount + 1);
-        }
-      }
- 
-      position.delete(index);
-      position.set(nextIndex, [piece, turn]);
-
-      const nextMove = prev.move + 1;
-
-      const newRecord: GameRecord = {
-        x,
-        y,
-        turn,
-        piece,
-        move: nextMove,
-      };
-
-      return {
-        turn: !prev.turn,
-        move: nextMove,
-        position: new Map(position),
-        pieceInHand: [new Map(bPieceInHand), new Map(wPieceInHand)],
-        records: [...records, newRecord],
-      } satisfies Game;
-    });
+    setGame((prev: Game) => movePiece(prev, selection, xyToIndex(x, y)));
   }, [selection, setGame]);
-
-  const selectedIndex = selection?.index;
-
-  const { position } = game;
 
   React.useEffect(() => {
     setSelection(null);
   }, [game]);
 
+  const { position, pieceInHand: [bPieceOfHand, wPieceOfHand] } = game;
+  const selectedIndex = selection?.index;
   const candidatesVisible = visibilityOptions?.includes('移動範囲') ?? false;
 
+  const handleSelectInHandPiece = (type: PieceType) => {
+    setSelection({
+      index: null,
+      piece: type,
+      turn: game.turn,
+    });
+  };
+
+  const standColor = '#C49958';
   return (
-    <svg {...{width, height}} className='disable-select'>
-      <g transform={`translate(${margin},${margin+heightGuide}) scale(${scale},${scale})`}>
+    <Stack direction='row'>
+      <Flex alignItems='start'>
+        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
+          <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece} />
+          <Text>後手</Text>
+        </Stack>
+      </Flex>
 
-        <XLabel />
-        <YLabel />
+      <svg {...{width, height}} className='disable-select'>
+        <g transform={`translate(${margin},${margin+heightGuide}) scale(${scale},${scale})`}>
 
-        <polygon points={polylineToPoints(createRectanglePolygon(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
+          <XLabel />
+          <YLabel />
 
-        {
-          Array.from(position.entries()).map(([index, [type, turn]]) => {
-            return <PieceSvgGroup key={index} {...{type, index, turn: turn, scale, onClick, selected: selectedIndex === index}} />
-          })
-        }
+          <polygon points={polylineToPoints(createRectanglePolygon(boardWidth, boardHeight))} stroke='none' fill='#FCD7A1' />
 
-        { selection && <CandidatesSvg {...{...selection, position, onClick: handleMove, visible: candidatesVisible}} /> }
+          {
+            Array.from(position.entries()).map(([index, {type, turn}]) => {
+              return <PieceSvgGroup key={index} {...{type, index, turn, scale, onClick: handleSelect, selected: selectedIndex === index}} />
+            })
+          }
 
-        <BoardGrid size={gridSize} scale={scale} />
-      </g>
-    </svg>
+          { (selection && selection.index != null) && <CandidatesSvg {...{...selection, position, onClick: handleMove, visible: candidatesVisible}} /> }
+
+          <BoardGrid size={gridSize} scale={scale} />
+        </g>
+      </svg>
+
+      <Flex alignItems='end'>
+        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
+          <Text>先手</Text>
+          <PieceStand pieceInHand={bPieceOfHand} turn={true} disabled={!game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece}/>
+        </Stack>
+      </Flex>
+    </Stack>
   );
 }
 
-export { BoardSvg }
+export { ShogiBoardSvg }

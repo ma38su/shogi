@@ -1,4 +1,4 @@
-import { Button, Text } from "@chakra-ui/react";
+import { Button, Text, Wrap, WrapItem } from "@chakra-ui/react";
 import { PieceType, PlayerTurn } from "../shogi";
 import { PieceSvg } from "./PieceSvg";
 
@@ -7,7 +7,7 @@ type Props = {
     turn: boolean,
     disabled: boolean,
     selected: boolean,
-    handleDropPiece: (pieceType: PieceType, turn: PlayerTurn) => void,
+    handleSelectPiece: (pieceType: PieceType) => void,
 };
 
 const PieceStand = (props: Props) => {
@@ -17,20 +17,24 @@ const PieceStand = (props: Props) => {
     turn,
     disabled,
     selected,
-    handleDropPiece,
+    handleSelectPiece,
   } = props;
 
-  return <>
-  {
-    Array.from(pieceInHand.entries()).map(([type, val]) => {
-      const handleClick = () => handleDropPiece(type, turn);
-      return (
-        <Button key={type} colorScheme={selected ? 'blue' : undefined} onClick={handleClick} disabled={disabled}>
-          <PieceSvg key={type} width={40} height={40} turn={turn} type={type} /> x{val}
-        </Button>
-      );
-    })
-  }
-  </>
+  return (
+    <Wrap>
+    {
+      Array.from(pieceInHand.entries()).map(([type, val]) => {
+        const handleClick = () => handleSelectPiece(type);
+        return (
+          <WrapItem key={type}>
+            <Button colorScheme={selected ? 'blue' : undefined} onClick={handleClick} disabled={disabled}>
+              <PieceSvg key={type} width={40} height={40} turn={turn} type={type} /> x{val}
+            </Button>
+          </WrapItem>
+        );
+      })
+    }
+    </Wrap>
+  );
 };
 export { PieceStand }

@@ -1,4 +1,4 @@
-import { Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay } from "@chakra-ui/react";
+import { Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Text } from "@chakra-ui/react";
 import { GameRecord, isPromotable, PieceType, promote } from "../shogi";
 
 type Props = {
@@ -12,7 +12,7 @@ function PromotionDialog(props: Props) {
     handlePromotion,
   } = props;
 
-  const { piece } = lastRecord;
+  const { piece, turn } = lastRecord;
 
   const handleYes = () => {
     handlePromotion(true);
@@ -27,7 +27,12 @@ function PromotionDialog(props: Props) {
       <ModalContent>
         <ModalHeader>成りますか？</ModalHeader>
         <ModalBody>
-          {piece} → {promote(piece)}
+          <Text>
+            {turn ? '先手' : '後手'}
+          </Text>
+          <Text>
+            {piece} → {promote(piece)}
+          </Text>
         </ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={handleYes}>Yes</Button>
