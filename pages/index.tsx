@@ -10,7 +10,8 @@ import { PromotionDialog } from '../libs/components/PromotionDialog';
 import { GameRecordList, xyToLabel } from '../libs/components/GameRecordList';
 import { CheckAlertDialog } from '../libs/components/CheckAlertDialog';
 import { CheckmateDialog } from '../libs/components/CheckmateDialog';
-import { calculateNextMove, moveNextByAi } from '../libs/shogi-ai';
+import { calculateNextMove, moveNextByAi, PlayerMode } from '../libs/shogi-ai';
+import { PlayerModeSelector } from '../libs/components/PlayerModeSelector';
 
 function newGame(): Game {
   return {
@@ -30,7 +31,7 @@ export default function Home() {
 
   const [checkAlertChecked, setCheckAlertChecked] = React.useState<boolean>(false);
 
-  const [aiTurn, setAiTurn] = React.useState<[boolean, boolean]>([false, true]);
+  const [playersMode, setPlayersMode] = React.useState<[PlayerMode, PlayerMode]>(['Player', 'AI']);
 
   const handleVisibilityOptionChange = (option: VisibilityOption) => {
     const state = visibilityOptions.includes(option);
@@ -68,9 +69,11 @@ export default function Home() {
   }
 
   React.useEffect(() => {
-    const [ senteAi, goteAi ] = aiTurn;
+    const [ senteAi, goteAi ] = playersMode;
     const { turn, records } = game;
-    if (!(senteAi && turn) || (goteAi && !turn)) {
+
+    const aiEnabled = (senteAi === 'AI' && turn) || (goteAi === 'AI' && !turn);
+    if (!aiEnabled) {
       setCheckAlertChecked(false);
     }
 
@@ -80,22 +83,19 @@ export default function Home() {
       // 詰んでいる場合は処理しない
       return;
     }
+
     if (!isPromotable(lastRecord) || checkAlertChecked) {
-      if ((senteAi && turn) || (goteAi && !turn)) {
+      if (aiEnabled) {
         setGame(prev => moveNextByAi(prev));
       }
     }
-  }, [game, aiTurn, checkAlertChecked]);
+  }, [game, playersMode, checkAlertChecked]);
 
   const isCheckmated = isCheckmate(game);
   const promotionDialogVisible = isPromotable(lastRecord);
   const checkDialogVisible = !promotionDialogVisible && !isCheckmated && !checkAlertChecked && isCheck(game, !turn);
 
-  const [senteAi, goteAi] = aiTurn;
-  const handleChangeAiSente = React.useCallback(() => setAiTurn(([sente, gote]) => [!sente, gote]), []);
-  const handleChangeAiGote = React.useCallback(() => setAiTurn(([sente, gote]) => [sente, !gote]), []);
-
-  console.log({promotionDialogVisible});
+  const [senteAi, goteAi] = playersMode;
 
   return (
     <>
@@ -106,7 +106,7 @@ export default function Home() {
       </Head>
       <Container maxWidth='40em'>
 
-        { isCheckmated && <CheckmateDialog game={game} handleReset={handleResetGame} /> }
+        { isCheckmated && <CheckmateDialog game={game} handleReset={handleResetGame} playersMode={playersMode} setPlayersMode={setPlayersMode} /> }
         { promotionDialogVisible && lastRecord && <PromotionDialog handlePromotion={handlePromotion} lastRecord={lastRecord} /> }
         { checkDialogVisible && <CheckAlertDialog isOpen={checkDialogVisible} handleClose={() => setCheckAlertChecked(true)} /> }
 
@@ -121,8 +121,7 @@ export default function Home() {
           <Stack>
             <Text>{move+1}手目 {turn ? '先手' : '後手'}番</Text>
             <Box>
-              <Button colorScheme={senteAi ? 'blue' : 'gray'} onClick={handleChangeAiSente}>先手AI</Button>
-              <Button colorScheme={goteAi ? 'blue' : 'gray'} onClick={handleChangeAiGote}>後手AI</Button>
+              <PlayerModeSelector playersMode={playersMode} setPlayersMode={setPlayersMode} />
             </Box>
             <Button colorScheme='red' onClick={handleResetGame}>投了</Button>
           </Stack>

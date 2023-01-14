@@ -1,5 +1,7 @@
 import { xyToLabel } from "./components/GameRecordList";
-import { Game, getMoveRangeList, indexToXY, isPromotable, movePiece, PiecePosition, PieceSelection, PieceType, PlayerTurn, promote, updatePromotion, xyToIndex } from "./shogi";
+import { Game, GameRecord, getMoveRangeList, indexToXY, isPromotable, movePiece, PiecePosition, PieceSelection, PieceType, PlayerTurn, promote, updatePromotion, xyToIndex } from "./shogi";
+
+type PlayerMode = 'Player' | 'AI';
 
 function getRandomInt(max: number) {
   return Math.floor(Math.random() * max);
@@ -11,17 +13,8 @@ function choiceRandom<T>(array: readonly T[]) {
 }
 
 function calculateNextMove(game: Game) {
-  const { position, turn } = game;
-  if (turn) {
-    console.log('sente AI');
-  } else {
-    console.log('gote AI');
-  }
-
-  const moveCandidates = generateNextMoveCandidates(position, turn);
-  
+  const moveCandidates = generateNextMoveCandidates(game);
   const nextMove = choiceRandom(moveCandidates);
-
   return nextMove;
 }
 
@@ -37,15 +30,25 @@ function moveNextByAi(game: Game) {
     return nextGame;
   }
 
+  const promoted = true;
+  const promotedLastRecord = {
+    ...records[records.length - 1],
+    behavior: promoted ? '成' : '不成'
+  } satisfies GameRecord;
+
   const newPosition = updatePromotion(lastRecord, position);
   return {
     ...nextGame,
+    records: [...records.slice(0, records.length - 1), promotedLastRecord],
     position: newPosition
   };
 }
 
-function generateNextMoveCandidates(position: Map<number, PiecePosition>, turn: boolean): [PieceType, number, number][] {
+function generateNextMoveCandidates(game: Game): [PieceType, number, number][] {
+
+  const { position, turn } = game;
   const results: [PieceType, number, number][] = [];
+
   for (const [index, piecePosition] of position) {
     const { type: pieceType, turn: pieceTurn } = piecePosition;
     if (turn !== pieceTurn) {
@@ -80,4 +83,5 @@ function generateNextMoveCandidates(position: Map<number, PiecePosition>, turn: 
   return results;
 }
 
-export { calculateNextMove, moveNextByAi }
+export type { PlayerMode };
+export { calculateNextMove, moveNextByAi };
