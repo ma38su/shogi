@@ -375,12 +375,34 @@ function updatePromotion(lastRecord: GameRecord, position: Map<number, PiecePosi
   return newPosition;
 }
 
+function generateDropCandidates(piece: PieceType, position: Map<number, PiecePosition>, turn: boolean) {
+  const dropCandidates = generateDropCandidateIndexes(position).map(index => indexToXY(index));
+  if (piece === '歩') {
+    const terminateY = turn ? 0 : 8;
+    const enabledX = dropCandidateIndexesPawnEnabledX(position, turn);
+    return dropCandidates
+      .filter(([x, y]) => enabledX.includes(x) && y !== terminateY)
+  } else if (piece === '香') {
+    const terminateY = turn ? 0 : 8;
+    return dropCandidates.filter(([_, y]) => y !== terminateY);
+  } else if (piece === '桂') {
+    return dropCandidates.filter(turn ? ([_, y]) => y >= 2 : ([x, y]) => y <= 6);
+  } else {
+    return dropCandidates;
+  }
+}
+
 function generateDropCandidateIndexes(position: Map<number, PiecePosition>) {
   return RangeIndex.map((_, i) => i).filter(i => !position.has(i));
 }
 
 function dropCandidateIndexesPawnEnabledX(position: Map<number, PiecePosition>, turn: boolean) {
-  return RangeXY.filter(x => RangeXY.map(y => position.get(xyToIndex(x, y))).every(state => state == null || state.turn != turn || state.type !== '歩'));
+  return RangeXY
+    .filter(x => {
+      return RangeXY
+        .map(y => position.get(xyToIndex(x, y)))
+        .every(state => state == null || state.turn != turn || state.type !== '歩')
+    });
 }
 
 export {
@@ -388,5 +410,6 @@ export {
   isCheck, isCheckmate, getMoveRangeList, xyToIndex, indexToXY, promote, isPromotable, xToLabel, yToLabel, movePiece, updatePromotion,
   generateDropCandidateIndexes,
   dropCandidateIndexesPawnEnabledX,
+  generateDropCandidates,
 }
 export type { PieceType, PlayerTurn, Game, GameRecord, PiecePosition, PieceSelection }
