@@ -1,5 +1,19 @@
-import { xyToLabel } from "./components/GameRecordList";
-import { Game, GameRecord, getMoveRangeList, indexToXY, isCheck, isPromotable, movePiece, PiecePosition, PieceSelection, PieceType, PlayerTurn, promote, updatePromotion, xyToIndex } from "./shogi";
+import type {
+  Game, GameRecord,
+  PiecePosition,
+  PieceSelection,
+  PieceType,
+} from "./shogi";
+
+import {
+  getMoveRangeList,
+  indexToXY,
+  isCheck,
+  isPromotable,
+  movePiece,
+  updatePromotion,
+  xyToIndex
+} from "./shogi";
 
 type PlayerMode = 'Player' | 'AI';
 
@@ -23,7 +37,7 @@ function calculateNextMove(game: Game): Candidate {
   let bestCandidates: Candidate[] = moveCandidates;
 
   for (const candidate of moveCandidates) {
-    const candidatePieceInHand = pieceInHand;
+    const [sentePiceInHand, gotePieceInHand] = pieceInHand;
 
     const [pieceType, prevIndex, nextIndex] = candidate;
 
@@ -31,18 +45,20 @@ function calculateNextMove(game: Game): Candidate {
     candidatePosition.delete(prevIndex);
 
     const position1 = candidatePosition.get(nextIndex);
+
+    let candidatePieceInHand = pieceInHand;
     if (position1 != null) {
       const { turn: turn1, type } = position1;
       if (turn === turn1) throw new Error();
 
       if (turn) {
-        const nextPieceInHand = new Map(candidatePieceInHand[0]);
-        nextPieceInHand.set(type, (nextPieceInHand.get(type) ?? 0) + 1);
-        candidatePieceInHand[0] = nextPieceInHand;
+        const newSentePieceInHand = new Map(sentePiceInHand);
+        newSentePieceInHand.set(type, (newSentePieceInHand.get(type) ?? 0) + 1);
+        candidatePieceInHand = [newSentePieceInHand, gotePieceInHand];
       } else {
-        const nextPieceInHand = new Map(candidatePieceInHand[1]);
-        nextPieceInHand.set(type, (nextPieceInHand.get(type) ?? 0) + 1);
-        candidatePieceInHand[1] = nextPieceInHand;
+        const newGotePieceInHand = new Map(gotePieceInHand);
+        newGotePieceInHand.set(type, (newGotePieceInHand.get(type) ?? 0) + 1);
+        candidatePieceInHand = [sentePiceInHand, newGotePieceInHand];
       }
     }
     candidatePosition.set(nextIndex, { type: pieceType, turn });
@@ -186,12 +202,12 @@ function calculateScore(position: Map<number, PiecePosition>, pieceInHand: [Map<
     }
   }
 
-  // const pieceInHandScore = (calculatePiceInHandScore(sentePieceInHand) - calculatePiceInHandScore(gotePieceInHand)) * 1.1;
-  // if (turn) {
-  //   score += pieceInHandScore;
-  // } else {
-  //   score -= pieceInHandScore;
-  // }
+  const pieceInHandScore = (calculatePiceInHandScore(sentePieceInHand) - calculatePiceInHandScore(gotePieceInHand)) * 1.1;
+  if (turn) {
+    score += pieceInHandScore;
+  } else {
+    score -= pieceInHandScore;
+  }
   return score;
 }
 

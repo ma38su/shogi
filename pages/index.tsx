@@ -1,16 +1,16 @@
 import React from 'react';
-import { Box, Button, Center, Container, Divider, Heading, position, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Center, Container, Divider, Heading, Stack, Text } from '@chakra-ui/react'
 import Head from 'next/head'
 
 import { InitialPosition } from '../libs/record';
 import { ShogiBoardSvg } from '../libs/components/BoardSvg'
 import { VisibilityOption, VisibilityOptions } from '../libs/VisibilityOption';
-import { Game, GameRecord, indexToXY, isCheck, isCheckmate, isPromotable, movePiece, PiecePosition, PieceSelection, PieceType, promote, updatePromotion, xyToIndex } from '../libs/shogi';
+import { Game, GameRecord, isCheck, isCheckmate, isPromotable, PieceType, updatePromotion } from '../libs/shogi';
 import { PromotionDialog } from '../libs/components/PromotionDialog';
-import { GameRecordList, xyToLabel } from '../libs/components/GameRecordList';
+import { GameRecordList } from '../libs/components/GameRecordList';
 import { CheckAlertDialog } from '../libs/components/CheckAlertDialog';
 import { CheckmateDialog } from '../libs/components/CheckmateDialog';
-import { calculateNextMove, moveNextByAi, PlayerMode } from '../libs/shogi-ai';
+import { moveNextByAi, PlayerMode } from '../libs/shogi-ai';
 import { PlayerModeSelector } from '../libs/components/PlayerModeSelector';
 
 function newGame(): Game {
@@ -86,7 +86,7 @@ export default function Home() {
 
     if (!isPromotable(lastRecord) || checkAlertChecked) {
       if (aiEnabled) {
-        setGame(prev => moveNextByAi(prev));
+        setGame(moveNextByAi(game));
       }
     }
   }, [game, playersMode, checkAlertChecked]);

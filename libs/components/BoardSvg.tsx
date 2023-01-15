@@ -1,6 +1,6 @@
 import React from "react";
 import { createRectanglePolygon } from "../geometry";
-import { PlayerTurn, PieceType, xyToIndex, Game, promote, GameRecord, yToLabel, PiecePosition, PieceSelection, movePiece, CapturablePieceList } from "../shogi";
+import { PlayerTurn, PieceType, xyToIndex, Game, yToLabel, PieceSelection, movePiece } from "../shogi";
 import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvgGroup } from "./PieceSvgGroup";
@@ -83,6 +83,7 @@ function ShogiBoardSvg(props: Props) {
 
   const handleMove = React.useCallback(function onClick(x: number, y: number) {
     if (!selection) throw new Error();
+    console.log('handle move', {x, y});
     setGame((prev: Game) => movePiece(prev, selection, xyToIndex(x, y)));
   }, [selection, setGame]);
 
@@ -94,12 +95,16 @@ function ShogiBoardSvg(props: Props) {
   const selectedIndex = selection?.index;
   const candidatesVisible = visibilityOptions?.includes('移動範囲') ?? false;
 
-  const handleSelectInHandPiece = (type: PieceType) => {
-    setSelection({
-      index: null,
-      piece: type,
-      turn: game.turn,
-    });
+  const handleSelectInHandPiece = (type: PieceType | null) => {
+    if (type == null) {
+      setSelection(null);
+    } else {
+      setSelection({
+        index: null,
+        piece: type,
+        turn: game.turn,
+      });
+    }
   };
 
   const standColor = '#C49958';
@@ -107,7 +112,7 @@ function ShogiBoardSvg(props: Props) {
     <Wrap spacing='10px' justify='center'>
       <WrapItem alignItems='start' >
         <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor, padding: '0.6em'}}>
-          <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece} />
+          <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selection={selection} handleSelectPiece={handleSelectInHandPiece} />
           <Text>後手</Text>
         </Stack>
       </WrapItem>
@@ -126,7 +131,7 @@ function ShogiBoardSvg(props: Props) {
               })
             }
 
-            { (selection && selection.index != null) && <CandidatesSvg {...{...selection, position, onClick: handleMove, visible: candidatesVisible}} /> }
+            { (selection && <CandidatesSvg {...{...selection, position, onClick: handleMove, visible: candidatesVisible}} />) }
 
             <BoardGrid size={gridSize} scale={scale} />
           </g>
@@ -135,7 +140,7 @@ function ShogiBoardSvg(props: Props) {
       <WrapItem alignItems='end'>
         <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor, padding: '0.6em'}}>
           <Text>先手</Text>
-          <PieceStand pieceInHand={bPieceOfHand} turn={true} disabled={!game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece}/>
+          <PieceStand pieceInHand={bPieceOfHand} turn={true} disabled={!game.turn} selection={selection} handleSelectPiece={handleSelectInHandPiece} />
         </Stack>
       </WrapItem>
     </Wrap>

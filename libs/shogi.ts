@@ -13,7 +13,7 @@ type GameRecord = {
   y: number,
   piece: PieceType,
   turn: PlayerTurn, // true: 先手, false: 後手
-  behavior?: BehaviorType,  // true: 成り, false: 不成, undefined: 未選択
+  behavior: BehaviorType | null,  // true: 成り, false: 不成, undefined: 未選択
 }
 
 type PiecePosition = {
@@ -49,6 +49,15 @@ const promotablePieceSet: Set<PieceType> = new Set([
   '飛',
   '銀',
 ] satisfies PieceType[]);
+
+const promotedPieceMap: Map<PieceType, PieceType> = new Map([
+  ['と',  '歩'],
+  ['成香', '香'],
+  ['成桂', '桂'],
+  ['成銀', '銀'],
+  ['馬', '角'],
+  ['龍', '飛'],
+] satisfies [PieceType, PieceType][]);
 
 function yToLabel(y: number) {
   return yLabels[y];
@@ -272,21 +281,24 @@ function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Ga
 
   const captured = position.get(nextIndex);
   if (captured != null) {
-    const { type: capturedType, turn: capturedTurn } = captured;
+    let { type: capturedType } = captured;
+    const { turn: capturedTurn } = captured;
     if (turn === capturedTurn) {
       console.log(captured);
       throw new Error(`${piece}: ${index && indexToLabel(index)} => ${indexToLabel(nextIndex)}`);
     }
+    
+    capturedType = promotedPieceMap.get(capturedType) ?? capturedType;
 
     const [sentePieceInHand, gotePieceInHand] = newPieceInHand;
     if (turn) {
-      const newSentePieceInHand = new Map(newPieceInHand[0]);
-      const prevCount = newSentePieceInHand.get(capturedType) ?? 0;
+      const newSentePieceInHand = new Map(sentePieceInHand);
+      const prevCount = sentePieceInHand.get(capturedType) ?? 0;
       newSentePieceInHand.set(capturedType, prevCount + 1);
       newPieceInHand = [newSentePieceInHand, gotePieceInHand];
     } else {
-      const newGotePieceInHand = new Map(newPieceInHand[1]);
-      const prevCount = newGotePieceInHand.get(capturedType) ?? 0;
+      const newGotePieceInHand = new Map(gotePieceInHand);
+      const prevCount = gotePieceInHand.get(capturedType) ?? 0
       newGotePieceInHand.set(capturedType, prevCount + 1);
       newPieceInHand = [sentePieceInHand, newGotePieceInHand];
     }
@@ -296,6 +308,31 @@ function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Ga
     newPosition.delete(index);
   } else {
     // in hand piece
+    const [sentePieceInHand, gotePieceInHand] = newPieceInHand;
+    if (turn) {
+      const newSentePieceInHand = new Map(sentePieceInHand);
+      if (!newSentePieceInHand.has(piece)) throw new Error();
+      const prevCount = newSentePieceInHand.get(piece);
+      if (prevCount == null) throw new Error();
+
+      if (prevCount === 1) {
+        newSentePieceInHand.delete(piece);
+      } else {
+        newSentePieceInHand.set(piece, prevCount - 1);
+      }
+      newPieceInHand = [newSentePieceInHand, gotePieceInHand];
+    } else {
+      const newGotePieceInHand = new Map(gotePieceInHand);
+      const prevCount = newGotePieceInHand.get(piece);
+      if (prevCount == null) throw new Error();
+
+      if (prevCount === 1) {
+        newGotePieceInHand.delete(piece);
+      } else {
+        newGotePieceInHand.set(piece, prevCount - 1);
+      }
+      newPieceInHand = [sentePieceInHand, newGotePieceInHand];
+    }
   }
   newPosition.set(nextIndex, { type: piece, turn } satisfies PiecePosition);
 
@@ -306,7 +343,9 @@ function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Ga
     y,
     turn,
     piece,
+    behavior: index == null ? '打' : null,
   }
+
   return {
     move: move + 1,
     turn: !game.turn,
@@ -332,5 +371,5 @@ function updatePromotion(lastRecord: GameRecord, position: Map<number, PiecePosi
   return newPosition;
 }
 
-export { CapturablePieceList, isCheck, isCheckmate, getMoveRangeList, xyToIndex, indexToXY, promote, isPromotable, xToLabel, yToLabel, movePiece, updatePromotion }
+export { CapturablePieceList, promotedPieceMap, isCheck, isCheckmate, getMoveRangeList, xyToIndex, indexToXY, promote, isPromotable, xToLabel, yToLabel, movePiece, updatePromotion }
 export type { PieceType, PlayerTurn, Game, GameRecord, PiecePosition, PieceSelection }
