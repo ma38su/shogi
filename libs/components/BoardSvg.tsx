@@ -92,7 +92,7 @@ function ShogiBoardSvg(props: Props) {
 
   const { position, pieceInHand: [bPieceOfHand, wPieceOfHand] } = game;
   const selectedIndex = selection?.index;
-  const candidatesVisible = visibilityOptions?.includes('移動範囲') ?? false;
+  const candidatesVisible = visibilityOptions?.includes('移動候補表示') ?? false;
 
   const handleSelectInHandPiece = (type: PieceType | null) => {
     if (type == null) {
