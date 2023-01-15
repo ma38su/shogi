@@ -1,6 +1,6 @@
 import React from "react";
 import { createRectanglePolygon } from "../geometry";
-import { PlayerTurn, PieceType, xyToIndex, Game, yToLabel, PieceSelection, movePiece } from "../shogi";
+import { PlayerTurn, PieceType, xyToIndex, Game, yToLabel, PieceSelection, movePiece, RangeXY } from "../shogi";
 import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvgGroup } from "./PieceSvgGroup";
@@ -12,8 +12,8 @@ const XLabel = React.memo(function XLabel() {
   return (
     <>
     {
-      [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        .map((n, i) => <text key={n} fontSize={0.4} textAnchor='middle' transform={`translate(${8.5-i},-0.2)`}>{n}</text>)
+      RangeXY
+        .map((i) => <text key={i} fontSize={0.4} textAnchor='middle' transform={`translate(${8.5-i},-0.2)`}>{i+1}</text>)
     }
     </>
   )
@@ -22,8 +22,8 @@ const YLabel = React.memo(function YLabel() {
   return (
     <>
     {
-      [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        .map((n, i) => <text key={n} fontSize={0.4} textAnchor='middle' transform={`translate(${9.5},${i+0.7})`}>{yToLabel(n)}</text>)
+      RangeXY
+        .map((i) => <text key={i} fontSize={0.4} textAnchor='middle' transform={`translate(${9.5},${i+0.7})`}>{yToLabel(i)}</text>)
     }
     </>
   )
