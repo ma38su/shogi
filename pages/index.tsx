@@ -69,30 +69,31 @@ export default function Home() {
   }
 
   React.useEffect(() => {
-    setTimeout(() => {
-      const [ senteAi, goteAi ] = playersMode;
-      const { turn, records } = game;
-  
-      const aiEnabled = (senteAi === 'AI' && turn) || (goteAi === 'AI' && !turn);
-      if (!aiEnabled) {
-        setCheckAlertChecked(false);
-      }
-  
-      // AI処理
-      const lastRecord = records.length > 0 ? records[records.length - 1] : null;
-      if (isCheckmate(game)) {
-        // 詰んでいる場合は処理しない
-        return;
-      }
-  
-      if (!isPromotable(lastRecord) || checkAlertChecked) {
-        if (aiEnabled) {
-          setGame(moveNextByAi(game));
-        }
-      }
-    }, 0);
-  }, [game, playersMode, checkAlertChecked]);
+    const [ senteAi, goteAi ] = playersMode;
+    const { turn, records } = game;
 
+    const aiEnabled = (senteAi === 'AI' && turn) || (goteAi === 'AI' && !turn);
+    if (!aiEnabled) {
+      setCheckAlertChecked(false);
+    }
+    // AI処理
+    const lastRecord = records.length > 0 ? records[records.length - 1] : null;
+    if (isCheckmate(game)) {
+      // 詰んでいる場合は処理しない
+      return;
+    }
+
+    if (!isPromotable(lastRecord)) {
+      if (aiEnabled) {
+        setTimeout(() => {
+          setGame(moveNextByAi(game));
+        }, 0);
+      }
+    }
+  }, [game, playersMode]);
+
+
+  console.log({checkAlertChecked});
   const isCheckmated = isCheckmate(game);
   const promotionDialogVisible = isPromotable(lastRecord);
   const checkDialogVisible = !promotionDialogVisible && !isCheckmated && !checkAlertChecked && isCheck(position, !turn);
