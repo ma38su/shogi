@@ -102,7 +102,7 @@ export default function Home() {
         <meta name="description" content="Shogi Board Prototype" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <Container maxWidth='45em'>
+      <Container maxWidth='55em'>
 
         { isCheckmated && <CheckmateDialog game={game} handleReset={handleResetGame} playersMode={playersMode} setPlayersMode={setPlayersMode} /> }
         { promotionDialogVisible && lastRecord && <PromotionDialog handlePromotion={handlePromotion} lastRecord={lastRecord} /> }

@@ -1,6 +1,6 @@
 import React from "react";
 import { createRectanglePolygon } from "../geometry";
-import { PlayerTurn, PieceType, xyToIndex, Game, promote, GameRecord, yToLabel, PiecePosition, PieceSelection, movePiece } from "../shogi";
+import { PlayerTurn, PieceType, xyToIndex, Game, promote, GameRecord, yToLabel, PiecePosition, PieceSelection, movePiece, CapturablePieceList } from "../shogi";
 import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvgGroup } from "./PieceSvgGroup";
@@ -59,8 +59,8 @@ function ShogiBoardSvg(props: Props) {
     visibilityOptions,
   } = props;
 
-  const standWidth = 100;
-  const standHeight = 150;
+  const standWidth = 185;
+  const standHeight = 240;
 
   const gridSize = 1;
   const margin = 1;
@@ -105,8 +105,8 @@ function ShogiBoardSvg(props: Props) {
   const standColor = '#C49958';
   return (
     <Wrap spacing='10px' justify='center'>
-      <WrapItem alignItems='start'>
-        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
+      <WrapItem alignItems='start' >
+        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor, padding: '0.6em'}}>
           <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece} />
           <Text>後手</Text>
         </Stack>
@@ -133,7 +133,7 @@ function ShogiBoardSvg(props: Props) {
         </svg>
       </WrapItem>
       <WrapItem alignItems='end'>
-        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
+        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor, padding: '0.6em'}}>
           <Text>先手</Text>
           <PieceStand pieceInHand={bPieceOfHand} turn={true} disabled={!game.turn} selected={false} handleSelectPiece={handleSelectInHandPiece}/>
         </Stack>

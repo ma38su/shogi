@@ -12,25 +12,56 @@ function choiceRandom<T>(array: readonly T[]) {
   return array[i];
 }
 
-function calculateNextMove(game: Game) {
+type Candidate = [PieceType, number, number];
+
+function calculateNextMove(game: Game): Candidate {
   const moveCandidates = generateNextMoveCandidates(game);
 
-  const { position, turn } = game;
+  const { position, turn, pieceInHand } = game;
 
-  const noChecked = moveCandidates.filter(candidate => !isChecked(position, candidate, turn));
-  if (noChecked.length > 0) {
-    const checkCandidate = noChecked.filter(candidate => isChecked(position, candidate, !turn));
-    if (checkCandidate.length > 0) {
-      const nextMove = choiceRandom(checkCandidate);
-      return nextMove;
+  let bestScore = Number.NEGATIVE_INFINITY;
+  let bestCandidates: Candidate[] = moveCandidates;
+
+  for (const candidate of moveCandidates) {
+    const candidatePieceInHand = pieceInHand;
+
+    const [pieceType, prevIndex, nextIndex] = candidate;
+
+    const candidatePosition = new Map(position);
+    candidatePosition.delete(prevIndex);
+
+    const position1 = candidatePosition.get(nextIndex);
+    if (position1 != null) {
+      const { turn: turn1, type } = position1;
+      if (turn === turn1) throw new Error();
+
+      if (turn) {
+        const nextPieceInHand = new Map(candidatePieceInHand[0]);
+        nextPieceInHand.set(type, (nextPieceInHand.get(type) ?? 0) + 1);
+        candidatePieceInHand[0] = nextPieceInHand;
+      } else {
+        const nextPieceInHand = new Map(candidatePieceInHand[1]);
+        nextPieceInHand.set(type, (nextPieceInHand.get(type) ?? 0) + 1);
+        candidatePieceInHand[1] = nextPieceInHand;
+      }
+    }
+    candidatePosition.set(nextIndex, { type: pieceType, turn });
+    if (isCheck(candidatePosition, !turn)) {
+      // 王手になるので除外
+      continue;
     }
 
-    const nextMove = choiceRandom(noChecked);
-    return nextMove;
-  } else {
-    const nextMove = choiceRandom(moveCandidates);
-    return nextMove;
+    const nextScore = calculateScore(candidatePosition, candidatePieceInHand, turn);
+    if (bestScore < nextScore) {
+      bestScore = nextScore;
+      bestCandidates = [candidate];
+    } else if (bestScore === nextScore) {
+      bestCandidates.push(candidate);
+    }
   }
+
+  const nextMove = choiceRandom(bestCandidates);
+  return nextMove;
 }
 
 function moveNextByAi(game: Game) {
@@ -99,7 +130,8 @@ function generateNextMoveCandidates(game: Game): [PieceType, number, number][] {
   return results;
 }
 
-function isChecked(position: Map<number, PiecePosition>, candidate: [PieceType, number, number], turn: boolean) {
+// 移動後、王手にならないかのチェック
+function isChecked(position: Map<number, PiecePosition>, candidate: [PieceType, number, number], turn: boolean): boolean {
   const [pieceType, prevIndex, nextIndex] = candidate;
 
   const candidatePosition = new Map(position);
@@ -107,6 +139,60 @@ function isChecked(position: Map<number, PiecePosition>, candidate: [PieceType, 
   candidatePosition.set(nextIndex, { type: pieceType, turn });
   
   return isCheck(candidatePosition, !turn);
+}
+
+const pieceScoreTable = new Map<PieceType, number>(
+  [
+    ['歩', 90],
+    ['香', 315],
+    ['桂', 405],
+    ['銀', 495],
+    ['金', 540],
+    ['角', 855],
+    ['飛', 990],
+    ['と', 540],
+    ['成香', 540],
+    ['成桂', 540],
+    ['成銀', 540],
+    ['馬', 945],
+    ['龍', 1395],
+    ['王', 15000],
+    ['玉', 15000],
+  ],
+);
+
+function calculatePiceInHandScore(pieceInHand: Map<PieceType, number>): number {
+  let score = 0;
+  for (const [pieceType, count] of pieceInHand) {
+    const pieceScore = pieceScoreTable.get(pieceType);
+    if (pieceScore == null) throw new Error();
+    score += pieceScore;
+  }
+  return score;
+}
+
+function calculateScore(position: Map<number, PiecePosition>, pieceInHand: [Map<PieceType, number>, Map<PieceType, number>], turn: boolean): number {
+  let score = 0;
+  const [ sentePieceInHand, gotePieceInHand ] = pieceInHand;
+
+  for (const { type: pieceType, turn: pieceTurn } of position.values()) {
+    const pieceScore = pieceScoreTable.get(pieceType);
+    if (pieceScore == null) throw new Error();
+
+    if (turn === pieceTurn) {
+      score += pieceScore;
+    } else {
+      score -= pieceScore;
+    }
+  }
+
+  // const pieceInHandScore = (calculatePiceInHandScore(sentePieceInHand) - calculatePiceInHandScore(gotePieceInHand)) * 1.1;
+  // if (turn) {
+  //   score += pieceInHandScore;
+  // } else {
+  //   score -= pieceInHandScore;
+  // }
+  return score;
 }
 
 export type { PlayerMode };

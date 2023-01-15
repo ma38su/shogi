@@ -1,5 +1,5 @@
 import { Button, Text, Wrap, WrapItem } from "@chakra-ui/react";
-import { PieceType, PlayerTurn } from "../shogi";
+import { CapturablePieceList, PieceType, PlayerTurn } from "../shogi";
 import { PieceSvg } from "./PieceSvg";
 
 type Props = {
@@ -21,18 +21,22 @@ const PieceStand = (props: Props) => {
   } = props;
 
   return (
-    <Wrap>
+    <Wrap >
     {
-      Array.from(pieceInHand.entries()).map(([type, val]) => {
-        const handleClick = () => handleSelectPiece(type);
-        return (
-          <WrapItem key={type}>
-            <Button colorScheme={selected ? 'blue' : undefined} onClick={handleClick} disabled={disabled}>
-              <PieceSvg key={type} width={40} height={40} turn={turn} type={type} /> x{val}
-            </Button>
-          </WrapItem>
-        );
-      })
+      CapturablePieceList
+        .filter(piece => pieceInHand.has(piece))
+        .map(type => {
+          const val = pieceInHand.get(type);
+          if (val == null) throw new Error();
+          const handleClick = () => handleSelectPiece(type);
+          return (
+            <WrapItem key={type}>
+              <Button style={{width: '4.75em', padding: '0em'}} colorScheme={selected ? 'blue' : undefined} onClick={handleClick} disabled={disabled}>
+                <PieceSvg key={type} width={40} height={40} turn={turn} type={type} /> x{val}
+              </Button>
+            </WrapItem>
+          );
+        })
     }
     </Wrap>
   );

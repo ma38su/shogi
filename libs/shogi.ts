@@ -262,13 +262,13 @@ function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Ga
   const { index, piece, turn } = selection;
   const {
     position,
-    pieceInHand: [sentePieceInHand, gotePieceInHand],
-    records
+    pieceInHand,
+    records,
+    move,
   } = game;
 
   const newPosition = new Map(position);
-  const newSentePieceInHand = new Map(sentePieceInHand);
-  const newGotePieceInHand = new Map(gotePieceInHand);
+  let newPieceInHand = pieceInHand;
 
   const captured = position.get(nextIndex);
   if (captured != null) {
@@ -278,12 +278,17 @@ function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Ga
       throw new Error(`${piece}: ${index && indexToLabel(index)} => ${indexToLabel(nextIndex)}`);
     }
 
+    const [sentePieceInHand, gotePieceInHand] = newPieceInHand;
     if (turn) {
+      const newSentePieceInHand = new Map(newPieceInHand[0]);
       const prevCount = newSentePieceInHand.get(capturedType) ?? 0;
       newSentePieceInHand.set(capturedType, prevCount + 1);
+      newPieceInHand = [newSentePieceInHand, gotePieceInHand];
     } else {
+      const newGotePieceInHand = new Map(newPieceInHand[1]);
       const prevCount = newGotePieceInHand.get(capturedType) ?? 0;
       newGotePieceInHand.set(capturedType, prevCount + 1);
+      newPieceInHand = [sentePieceInHand, newGotePieceInHand];
     }
   }
 
@@ -294,21 +299,19 @@ function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Ga
   }
   newPosition.set(nextIndex, { type: piece, turn } satisfies PiecePosition);
 
-  const nextMove = game.move + 1;
-
   const [x, y] = indexToXY(nextIndex);
   const newRecord: GameRecord = {
+    move: move + 1,
     x,
     y,
     turn,
     piece,
-    move: nextMove,
   }
   return {
+    move: move + 1,
     turn: !game.turn,
-    move: nextMove,
     position: newPosition,
-    pieceInHand: [newSentePieceInHand, newGotePieceInHand],
+    pieceInHand: newPieceInHand,
     records: [...records, newRecord],
   }
 }
