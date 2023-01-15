@@ -27,8 +27,8 @@ const CandidatesSvg = React.memo(function CandidatesSvg(props: Props) {
   if (index == null) {
     const dropCandidates = generateDropCandidateIndexes(position);
     if (piece === '歩') {
-      const enabledX = dropCandidateIndexesPawnEnabledX(position);
-            return (
+      const enabledX = dropCandidateIndexesPawnEnabledX(position, turn);
+      return (
         <>
           {
             dropCandidates.map(index => indexToXY(index))

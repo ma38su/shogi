@@ -185,7 +185,7 @@ function generateNextMoveCandidatesFromPieceStand(game: Game): MoveCandidate[] {
   const dropCandidates = generateDropCandidateIndexes(position);
   for (const pieceType of pieceInHand[turn ? 0 : 1].keys()) {
     if (pieceType === '歩') {
-      const enabledX = dropCandidateIndexesPawnEnabledX(position);
+      const enabledX = dropCandidateIndexesPawnEnabledX(position, turn);
       for (const index of dropCandidates) {
         const [x, ] = indexToXY(index);
         if (enabledX.includes(x)) {

@@ -379,8 +379,8 @@ function generateDropCandidateIndexes(position: Map<number, PiecePosition>) {
   return RangeIndex.map((_, i) => i).filter(i => !position.has(i));
 }
 
-function dropCandidateIndexesPawnEnabledX(position: Map<number, PiecePosition>) {
-  return RangeXY.filter(x => RangeXY.map(y => position.get(xyToIndex(x, y))).every(state => state == null || state.type !== '歩'));
+function dropCandidateIndexesPawnEnabledX(position: Map<number, PiecePosition>, turn: boolean) {
+  return RangeXY.filter(x => RangeXY.map(y => position.get(xyToIndex(x, y))).every(state => state == null || state.turn != turn || state.type !== '歩'));
 }
 
 export {
