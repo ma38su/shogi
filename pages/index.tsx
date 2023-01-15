@@ -27,7 +27,7 @@ function newGame(): Game {
 }
 
 export default function Home() {
-  const [visibilityOptions, setVisibilityOptions] = React.useState<VisibilityOption[]>(['移動範囲']);
+  const [visibilityOptions, setVisibilityOptions] = React.useState<VisibilityOption[]>(['移動候補表示']);
 
   const [checkAlertChecked, setCheckAlertChecked] = React.useState<boolean>(false);
 
@@ -69,31 +69,36 @@ export default function Home() {
   }
 
   React.useEffect(() => {
-    const [ senteAi, goteAi ] = playersMode;
-    const { turn, records } = game;
-
-    const aiEnabled = (senteAi === 'AI' && turn) || (goteAi === 'AI' && !turn);
-    if (!aiEnabled) {
-      setCheckAlertChecked(false);
-    }
-
-    // AI処理
-    const lastRecord = records.length > 0 ? records[records.length - 1] : null;
-    if (isCheckmate(game)) {
-      // 詰んでいる場合は処理しない
-      return;
-    }
-
-    if (!isPromotable(lastRecord) || checkAlertChecked) {
-      if (aiEnabled) {
-        setGame(moveNextByAi(game));
+    setTimeout(() => {
+      const [ senteAi, goteAi ] = playersMode;
+      const { turn, records } = game;
+  
+      const aiEnabled = (senteAi === 'AI' && turn) || (goteAi === 'AI' && !turn);
+      if (!aiEnabled) {
+        setCheckAlertChecked(false);
       }
-    }
+  
+      // AI処理
+      const lastRecord = records.length > 0 ? records[records.length - 1] : null;
+      if (isCheckmate(game)) {
+        // 詰んでいる場合は処理しない
+        return;
+      }
+  
+      if (!isPromotable(lastRecord) || checkAlertChecked) {
+        if (aiEnabled) {
+          setGame(moveNextByAi(game));
+        }
+      }
+    }, 0);
   }, [game, playersMode, checkAlertChecked]);
 
   const isCheckmated = isCheckmate(game);
   const promotionDialogVisible = isPromotable(lastRecord);
   const checkDialogVisible = !promotionDialogVisible && !isCheckmated && !checkAlertChecked && isCheck(position, !turn);
+  
+  const [ senteAi, goteAi ] = playersMode;
+  const aiEnabled = (senteAi === 'AI' && turn) || (goteAi === 'AI' && !turn);
 
   return (
     <>
@@ -106,7 +111,7 @@ export default function Home() {
 
         { isCheckmated && <CheckmateDialog game={game} handleReset={handleResetGame} playersMode={playersMode} setPlayersMode={setPlayersMode} /> }
         { promotionDialogVisible && lastRecord && <PromotionDialog handlePromotion={handlePromotion} lastRecord={lastRecord} /> }
-        { checkDialogVisible && <CheckAlertDialog isOpen={checkDialogVisible} handleClose={() => setCheckAlertChecked(true)} /> }
+        { checkDialogVisible && !aiEnabled && <CheckAlertDialog isOpen={checkDialogVisible} handleClose={() => setCheckAlertChecked(true)} /> }
 
         <Heading>Shogi38</Heading>
         <Text>Shogi Board Prototype</Text>

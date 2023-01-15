@@ -7,6 +7,10 @@ type PieceType = '歩' | '桂' | '香' | '角' | '飛' | '銀' | '金' | '王' |
 
 type BehaviorType = '成' | '不成' | '' | '打';
 
+const RangeY: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
+const RangeXY: readonly number[] = RangeY;
+const RangeIndex: readonly number[] = Array.from({ length: 81 }).map((_, i) => i);
+
 type GameRecord = {
   move: number, // index
   x: number,
@@ -282,14 +286,14 @@ function movePiece(game: Game, selection: PieceSelection, nextIndex: number): Ga
   const captured = position.get(nextIndex);
   if (captured != null) {
     let { type: capturedType } = captured;
+    // 成り駒を戻す
+    capturedType = promotedPieceMap.get(capturedType) ?? capturedType;
+        
     const { turn: capturedTurn } = captured;
     if (turn === capturedTurn) {
-      console.log(captured);
       throw new Error(`${piece}: ${index && indexToLabel(index)} => ${indexToLabel(nextIndex)}`);
     }
     
-    capturedType = promotedPieceMap.get(capturedType) ?? capturedType;
-
     const [sentePieceInHand, gotePieceInHand] = newPieceInHand;
     if (turn) {
       const newSentePieceInHand = new Map(sentePieceInHand);
@@ -371,5 +375,18 @@ function updatePromotion(lastRecord: GameRecord, position: Map<number, PiecePosi
   return newPosition;
 }
 
-export { CapturablePieceList, promotedPieceMap, isCheck, isCheckmate, getMoveRangeList, xyToIndex, indexToXY, promote, isPromotable, xToLabel, yToLabel, movePiece, updatePromotion }
+function generateDropCandidateIndexes(position: Map<number, PiecePosition>) {
+  return RangeIndex.map((_, i) => i).filter(i => !position.has(i));
+}
+
+function dropCandidateIndexesPawnEnabledX(position: Map<number, PiecePosition>) {
+  return RangeXY.filter(x => RangeXY.map(y => position.get(xyToIndex(x, y))).every(state => state == null || state.type !== '歩'));
+}
+
+export {
+  CapturablePieceList, RangeXY, RangeIndex,
+  isCheck, isCheckmate, getMoveRangeList, xyToIndex, indexToXY, promote, isPromotable, xToLabel, yToLabel, movePiece, updatePromotion,
+  generateDropCandidateIndexes,
+  dropCandidateIndexesPawnEnabledX,
+}
 export type { PieceType, PlayerTurn, Game, GameRecord, PiecePosition, PieceSelection }

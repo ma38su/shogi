@@ -83,7 +83,6 @@ function ShogiBoardSvg(props: Props) {
 
   const handleMove = React.useCallback(function onClick(x: number, y: number) {
     if (!selection) throw new Error();
-    console.log('handle move', {x, y});
     setGame((prev: Game) => movePiece(prev, selection, xyToIndex(x, y)));
   }, [selection, setGame]);
 

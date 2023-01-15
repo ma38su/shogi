@@ -1,8 +1,12 @@
-import type {
+import {
+  dropCandidateIndexesPawnEnabledX,
   Game, GameRecord,
+  generateDropCandidateIndexes,
   PiecePosition,
   PieceSelection,
   PieceType,
+  RangeIndex,
+  RangeXY,
 } from "./shogi";
 
 import {
@@ -26,41 +30,70 @@ function choiceRandom<T>(array: readonly T[]) {
   return array[i];
 }
 
-type Candidate = [PieceType, number, number];
+type MoveCandidate = [PieceType, number | null, number];
 
-function calculateNextMove(game: Game): Candidate {
-  const moveCandidates = generateNextMoveCandidates(game);
+function calculateNextMove(game: Game): MoveCandidate {
+  const moveCandidates = [
+    ...generateNextMoveCandidates(game),
+    ...generateNextMoveCandidatesFromPieceStand(game),
+  ];
+  if (moveCandidates.length === 0) throw new Error('no candidates');
 
   const { position, turn, pieceInHand } = game;
 
   let bestScore = Number.NEGATIVE_INFINITY;
-  let bestCandidates: Candidate[] = moveCandidates;
+  let bestCandidates: MoveCandidate[] = moveCandidates;
 
   for (const candidate of moveCandidates) {
-    const [sentePiceInHand, gotePieceInHand] = pieceInHand;
+    const [sentePieceInHand, gotePieceInHand] = pieceInHand;
 
     const [pieceType, prevIndex, nextIndex] = candidate;
 
     const candidatePosition = new Map(position);
-    candidatePosition.delete(prevIndex);
-
-    const position1 = candidatePosition.get(nextIndex);
-
     let candidatePieceInHand = pieceInHand;
-    if (position1 != null) {
-      const { turn: turn1, type } = position1;
-      if (turn === turn1) throw new Error();
 
+    if (prevIndex != null) {
+      candidatePosition.delete(prevIndex);
+
+      const position1 = candidatePosition.get(nextIndex);
+      if (position1 != null) {
+        const { turn: turn1, type } = position1;
+        if (turn === turn1) throw new Error();
+  
+        if (turn) {
+          const newSentePieceInHand = new Map(sentePieceInHand);
+          newSentePieceInHand.set(type, (newSentePieceInHand.get(type) ?? 0) + 1);
+          candidatePieceInHand = [newSentePieceInHand, gotePieceInHand];
+        } else {
+          const newGotePieceInHand = new Map(gotePieceInHand);
+          newGotePieceInHand.set(type, (newGotePieceInHand.get(type) ?? 0) + 1);
+          candidatePieceInHand = [sentePieceInHand, newGotePieceInHand];
+        }
+      }
+    } else {
       if (turn) {
-        const newSentePieceInHand = new Map(sentePiceInHand);
-        newSentePieceInHand.set(type, (newSentePieceInHand.get(type) ?? 0) + 1);
+        const newSentePieceInHand = new Map(sentePieceInHand);
+        const prevCount = newSentePieceInHand.get(pieceType);
+        if (prevCount == null) throw new Error();
+        if (prevCount === 1) {
+          newSentePieceInHand.delete(pieceType);
+        } else {
+          newSentePieceInHand.set(pieceType, prevCount - 1);
+        }
         candidatePieceInHand = [newSentePieceInHand, gotePieceInHand];
       } else {
         const newGotePieceInHand = new Map(gotePieceInHand);
-        newGotePieceInHand.set(type, (newGotePieceInHand.get(type) ?? 0) + 1);
-        candidatePieceInHand = [sentePiceInHand, newGotePieceInHand];
+        const prevCount = newGotePieceInHand.get(pieceType);
+        if (prevCount == null) throw new Error();
+        if (prevCount === 1) {
+          newGotePieceInHand.delete(pieceType);
+        } else {
+          newGotePieceInHand.set(pieceType, prevCount - 1);
+        }
+        candidatePieceInHand = [sentePieceInHand, newGotePieceInHand];
       }
     }
+
     candidatePosition.set(nextIndex, { type: pieceType, turn });
     if (isCheck(candidatePosition, !turn)) {
       // 王手になるので除外
@@ -75,6 +108,8 @@ function calculateNextMove(game: Game): Candidate {
       bestCandidates.push(candidate);
     }
   }
+
+  if (bestCandidates.length === 0) throw new Error();
 
   const nextMove = choiceRandom(bestCandidates);
   return nextMove;
@@ -106,11 +141,10 @@ function moveNextByAi(game: Game) {
   };
 }
 
-function generateNextMoveCandidates(game: Game): [PieceType, number, number][] {
-
+function generateNextMoveCandidates(game: Game): MoveCandidate[] {
   const { position, turn } = game;
 
-  const results: [PieceType, number, number][] = [];
+  const results: MoveCandidate[] = [];
   for (const [index, piecePosition] of position) {
     const { type: pieceType, turn: pieceTurn } = piecePosition;
     if (turn !== pieceTurn) {
@@ -138,8 +172,29 @@ function generateNextMoveCandidates(game: Game): [PieceType, number, number][] {
           }
           break;
         }
-
         results.push([pieceType, index, index1]);
+      }
+    }
+  }
+  return results;
+}
+
+function generateNextMoveCandidatesFromPieceStand(game: Game): MoveCandidate[] {
+  const results: [PieceType, number | null, number][] = [];
+  const { position, turn, pieceInHand } = game;
+  const dropCandidates = generateDropCandidateIndexes(position);
+  for (const pieceType of pieceInHand[turn ? 0 : 1].keys()) {
+    if (pieceType === '歩') {
+      const enabledX = dropCandidateIndexesPawnEnabledX(position);
+      for (const index of dropCandidates) {
+        const [x, ] = indexToXY(index);
+        if (enabledX.includes(x)) {
+          results.push([pieceType, null, index]);
+        }
+      }
+    } else {
+      for (const index of dropCandidates) {
+        results.push([pieceType, null, index]);
       }
     }
   }

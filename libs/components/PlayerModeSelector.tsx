@@ -24,7 +24,7 @@ function PlayerModeSelector(props: Props) {
         <Stack direction='row'>
           <Text>先手</Text>
           <Radio value='Player'>Player</Radio>
-          <Radio value='AI'>NPC</Radio>
+          <Radio value='AI'>AI</Radio>
         </Stack>
       </RadioGroup>
 
@@ -32,7 +32,7 @@ function PlayerModeSelector(props: Props) {
         <Stack direction='row'>
           <Text>後手</Text>
           <Radio value='Player'>Player</Radio>
-          <Radio value='AI'>NPC</Radio>
+          <Radio value='AI'>AI</Radio>
         </Stack>
       </RadioGroup>
     </>
