@@ -1,4 +1,4 @@
-import { Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Text } from "@chakra-ui/react";
+import { Button, Dialog, Text } from "@chakra-ui/react";
 import { GameRecord, isPromotable, PieceType, promote } from "../shogi";
 
 type Props = {
@@ -22,24 +22,26 @@ function PromotionDialog(props: Props) {
   };
 
   return (
-    <Modal isOpen={isPromotable(lastRecord)} onClose={handleNo} isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>成りますか？</ModalHeader>
-        <ModalBody>
-          <Text>
-            {turn ? '先手' : '後手'}
-          </Text>
-          <Text>
-            {piece} → {promote(piece)}
-          </Text>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={handleYes}>Yes</Button>
-          <Button variant="ghost" onClick={handleNo}>No</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <Dialog.Root open={isPromotable(lastRecord)} onOpenChange={(e) => { if (!e.open) handleNo(); }} placement="center">
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content>
+          <Dialog.Header>成りますか？</Dialog.Header>
+          <Dialog.Body>
+            <Text>
+              {turn ? '先手' : '後手'}
+            </Text>
+            <Text>
+              {piece} → {promote(piece)}
+            </Text>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Button colorScheme="blue" mr={3} onClick={handleYes}>Yes</Button>
+            <Button variant="ghost" onClick={handleNo}>No</Button>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Positioner>
+    </Dialog.Root>
   );
 }
 

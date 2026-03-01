@@ -108,7 +108,7 @@ function ShogiBoardSvg(props: Props) {
 
   const standColor = '#C49958';
   return (
-    <Wrap spacing='10px' justify='center'>
+    <Wrap gap='10px' justify='center'>
       <WrapItem alignItems='start' >
         <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor, padding: '0.6em'}}>
           <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selection={selection} handleSelectPiece={handleSelectInHandPiece} />

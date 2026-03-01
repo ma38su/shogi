@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Center, Container, Divider, Heading, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Center, Container, Separator, Heading, Stack, Text } from '@chakra-ui/react'
 import Head from 'next/head'
 
 import { InitialPosition } from '../libs/record';
@@ -117,7 +117,7 @@ export default function Home() {
         <Heading>Shogi38</Heading>
         <Text>Shogi Board Prototype</Text>
 
-        <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
+        <Separator style={{marginTop: '5px', marginBottom: '10px'}} />
 
         <ShogiBoardSvg game={game} setGame={setGame} visibilityOptions={visibilityOptions} />
 
@@ -131,7 +131,7 @@ export default function Home() {
           </Stack>
         </Center>
 
-        <Divider style={{marginTop: '5px', marginBottom: '10px'}} />
+        <Separator style={{marginTop: '5px', marginBottom: '10px'}} />
           <Center>
             <Stack direction='row'>
             {

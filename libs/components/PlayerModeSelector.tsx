@@ -1,4 +1,4 @@
-import { Radio, RadioGroup, Stack, Text } from "@chakra-ui/react";
+import { HStack, RadioGroup, Text } from "@chakra-ui/react";
 import { PlayerMode } from "../shogi-ai";
 
 type Props = {
@@ -9,32 +9,48 @@ type Props = {
 function PlayerModeSelector(props: Props) {
 
   const { playersMode: [senteMode, goteMode], setPlayersMode } = props;
-  
-  const handleSenteMode = (nextValue: PlayerMode) => {
-    setPlayersMode(([_, prevGoteMode]) => [nextValue, prevGoteMode]);
+
+  const handleSenteMode = (e: RadioGroup.ValueChangeDetails) => {
+    setPlayersMode(([_, prevGoteMode]) => [e.value as PlayerMode, prevGoteMode]);
   }
 
-  const handleGoteMode = (nextValue: PlayerMode) => {
-    setPlayersMode(([prevSenteMode]) => [prevSenteMode, nextValue as PlayerMode]);
+  const handleGoteMode = (e: RadioGroup.ValueChangeDetails) => {
+    setPlayersMode(([prevSenteMode]) => [prevSenteMode, e.value as PlayerMode]);
   }
 
   return (
     <>
-      <RadioGroup onChange={handleSenteMode} value={senteMode}>
-        <Stack direction='row'>
+      <RadioGroup.Root onValueChange={handleSenteMode} value={senteMode}>
+        <HStack>
           <Text>先手</Text>
-          <Radio value='Player'>Player</Radio>
-          <Radio value='AI'>AI</Radio>
-        </Stack>
-      </RadioGroup>
+          <RadioGroup.Item value='Player'>
+            <RadioGroup.ItemHiddenInput />
+            <RadioGroup.ItemIndicator />
+            <RadioGroup.ItemText>Player</RadioGroup.ItemText>
+          </RadioGroup.Item>
+          <RadioGroup.Item value='AI'>
+            <RadioGroup.ItemHiddenInput />
+            <RadioGroup.ItemIndicator />
+            <RadioGroup.ItemText>AI</RadioGroup.ItemText>
+          </RadioGroup.Item>
+        </HStack>
+      </RadioGroup.Root>
 
-      <RadioGroup onChange={handleGoteMode} value={goteMode}>
-        <Stack direction='row'>
+      <RadioGroup.Root onValueChange={handleGoteMode} value={goteMode}>
+        <HStack>
           <Text>後手</Text>
-          <Radio value='Player'>Player</Radio>
-          <Radio value='AI'>AI</Radio>
-        </Stack>
-      </RadioGroup>
+          <RadioGroup.Item value='Player'>
+            <RadioGroup.ItemHiddenInput />
+            <RadioGroup.ItemIndicator />
+            <RadioGroup.ItemText>Player</RadioGroup.ItemText>
+          </RadioGroup.Item>
+          <RadioGroup.Item value='AI'>
+            <RadioGroup.ItemHiddenInput />
+            <RadioGroup.ItemIndicator />
+            <RadioGroup.ItemText>AI</RadioGroup.ItemText>
+          </RadioGroup.Item>
+        </HStack>
+      </RadioGroup.Root>
     </>
   );
 }

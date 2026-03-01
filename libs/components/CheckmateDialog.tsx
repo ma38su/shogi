@@ -1,4 +1,4 @@
-import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Radio, RadioGroup, Select, Stack, Text } from "@chakra-ui/react";
+import { Button, Dialog, Text } from "@chakra-ui/react";
 import { Game, isPromotable } from "../shogi";
 import { PlayerMode } from "../shogi-ai";
 import { PlayerModeSelector } from "./PlayerModeSelector";
@@ -19,19 +19,21 @@ function CheckmateDialog(props: Props) {
   } = props;
 
   return (
-    <Modal isOpen={true} onClose={handleReset} isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>{turn ? '先手' : '後手'}の勝ち</ModalHeader>
-        <ModalBody>
-          <Text>{move}手 詰み</Text>
-          <PlayerModeSelector playersMode={playersMode} setPlayersMode={setPlayersMode} />
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="green" mr={3} onClick={handleReset}>再戦</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <Dialog.Root open={true} onOpenChange={(e) => { if (!e.open) handleReset(); }} placement="center">
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content>
+          <Dialog.Header>{turn ? '先手' : '後手'}の勝ち</Dialog.Header>
+          <Dialog.Body>
+            <Text>{move}手 詰み</Text>
+            <PlayerModeSelector playersMode={playersMode} setPlayersMode={setPlayersMode} />
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Button colorScheme="green" mr={3} onClick={handleReset}>再戦</Button>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Positioner>
+    </Dialog.Root>
   );
 }
 

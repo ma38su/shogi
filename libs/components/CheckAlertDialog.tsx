@@ -1,5 +1,4 @@
-import { Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay } from "@chakra-ui/react";
-import { GameRecord, isPromotable, PieceType, promote } from "../shogi";
+import { Dialog } from "@chakra-ui/react";
 
 type Props = {
   isOpen: boolean,
@@ -13,12 +12,14 @@ function CheckAlertDialog(props: Props) {
   } = props;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>王手</ModalHeader>
-      </ModalContent>
-    </Modal>
+    <Dialog.Root open={isOpen} onOpenChange={(e) => { if (!e.open) handleClose(); }} placement="center">
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content>
+          <Dialog.Header>王手</Dialog.Header>
+        </Dialog.Content>
+      </Dialog.Positioner>
+    </Dialog.Root>
   );
 }
 
