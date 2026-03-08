@@ -1,5 +1,4 @@
-import { Button, Dialog, Text } from "@chakra-ui/react";
-import { GameRecord, isPromotable, PieceType, promote } from "../shogi";
+import { GameRecord, isPromotable, promote } from "../shogi";
 
 type Props = {
   lastRecord: GameRecord,
@@ -14,34 +13,21 @@ function PromotionDialog(props: Props) {
 
   const { piece, turn } = lastRecord;
 
-  const handleYes = () => {
-    handlePromotion(true);
-  };
-  const handleNo = () => {
-    handlePromotion(false);
-  };
+  if (!isPromotable(lastRecord)) return null;
 
   return (
-    <Dialog.Root open={isPromotable(lastRecord)} onOpenChange={(e) => { if (!e.open) handleNo(); }} placement="center">
-      <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content>
-          <Dialog.Header>成りますか？</Dialog.Header>
-          <Dialog.Body>
-            <Text>
-              {turn ? '先手' : '後手'}
-            </Text>
-            <Text>
-              {piece} → {promote(piece)}
-            </Text>
-          </Dialog.Body>
-          <Dialog.Footer>
-            <Button colorScheme="blue" mr={3} onClick={handleYes}>Yes</Button>
-            <Button variant="ghost" onClick={handleNo}>No</Button>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Positioner>
-    </Dialog.Root>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/50" onClick={() => handlePromotion(false)} />
+      <div className="relative bg-white rounded-lg shadow-lg p-6 min-w-[300px]">
+        <h2 className="text-lg font-bold mb-4">成りますか？</h2>
+        <p>{turn ? '先手' : '後手'}</p>
+        <p>{piece} → {promote(piece)}</p>
+        <div className="flex justify-end gap-2 mt-4">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded cursor-pointer" onClick={() => handlePromotion(true)}>Yes</button>
+          <button className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded cursor-pointer" onClick={() => handlePromotion(false)}>No</button>
+        </div>
+      </div>
+    </div>
   );
 }
 

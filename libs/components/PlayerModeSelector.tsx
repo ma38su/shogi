@@ -1,4 +1,3 @@
-import { HStack, RadioGroup, Text } from "@chakra-ui/react";
 import { PlayerMode } from "../shogi-ai";
 
 type Props = {
@@ -10,48 +9,40 @@ function PlayerModeSelector(props: Props) {
 
   const { playersMode: [senteMode, goteMode], setPlayersMode } = props;
 
-  const handleSenteMode = (e: RadioGroup.ValueChangeDetails) => {
-    setPlayersMode(([_, prevGoteMode]) => [e.value as PlayerMode, prevGoteMode]);
+  const handleSenteMode = (value: PlayerMode) => {
+    setPlayersMode(([_, prevGoteMode]) => [value, prevGoteMode]);
   }
 
-  const handleGoteMode = (e: RadioGroup.ValueChangeDetails) => {
-    setPlayersMode(([prevSenteMode]) => [prevSenteMode, e.value as PlayerMode]);
+  const handleGoteMode = (value: PlayerMode) => {
+    setPlayersMode(([prevSenteMode]) => [prevSenteMode, value]);
   }
 
   return (
-    <>
-      <RadioGroup.Root onValueChange={handleSenteMode} value={senteMode}>
-        <HStack>
-          <Text>先手</Text>
-          <RadioGroup.Item value='Player'>
-            <RadioGroup.ItemHiddenInput />
-            <RadioGroup.ItemIndicator />
-            <RadioGroup.ItemText>Player</RadioGroup.ItemText>
-          </RadioGroup.Item>
-          <RadioGroup.Item value='AI'>
-            <RadioGroup.ItemHiddenInput />
-            <RadioGroup.ItemIndicator />
-            <RadioGroup.ItemText>AI</RadioGroup.ItemText>
-          </RadioGroup.Item>
-        </HStack>
-      </RadioGroup.Root>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-3">
+        <span>先手</span>
+        <label className="flex items-center gap-1 cursor-pointer">
+          <input type="radio" name="sente" value="Player" checked={senteMode === 'Player'} onChange={() => handleSenteMode('Player')} />
+          Player
+        </label>
+        <label className="flex items-center gap-1 cursor-pointer">
+          <input type="radio" name="sente" value="AI" checked={senteMode === 'AI'} onChange={() => handleSenteMode('AI')} />
+          AI
+        </label>
+      </div>
 
-      <RadioGroup.Root onValueChange={handleGoteMode} value={goteMode}>
-        <HStack>
-          <Text>後手</Text>
-          <RadioGroup.Item value='Player'>
-            <RadioGroup.ItemHiddenInput />
-            <RadioGroup.ItemIndicator />
-            <RadioGroup.ItemText>Player</RadioGroup.ItemText>
-          </RadioGroup.Item>
-          <RadioGroup.Item value='AI'>
-            <RadioGroup.ItemHiddenInput />
-            <RadioGroup.ItemIndicator />
-            <RadioGroup.ItemText>AI</RadioGroup.ItemText>
-          </RadioGroup.Item>
-        </HStack>
-      </RadioGroup.Root>
-    </>
+      <div className="flex items-center gap-3">
+        <span>後手</span>
+        <label className="flex items-center gap-1 cursor-pointer">
+          <input type="radio" name="gote" value="Player" checked={goteMode === 'Player'} onChange={() => handleGoteMode('Player')} />
+          Player
+        </label>
+        <label className="flex items-center gap-1 cursor-pointer">
+          <input type="radio" name="gote" value="AI" checked={goteMode === 'AI'} onChange={() => handleGoteMode('AI')} />
+          AI
+        </label>
+      </div>
+    </div>
   );
 }
 

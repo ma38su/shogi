@@ -5,7 +5,6 @@ import { generateGrid, polylineToPoints } from "../svg";
 import { VisibilityOption } from "../VisibilityOption";
 import { PieceSvgGroup } from "./PieceSvgGroup";
 import { CandidatesSvg } from "./CandidatesSvg";
-import { Stack, Text, Wrap, WrapItem } from "@chakra-ui/react";
 import { PieceStand } from "./PieceStand";
 
 const XLabel = React.memo(function XLabel() {
@@ -108,14 +107,14 @@ function ShogiBoardSvg(props: Props) {
 
   const standColor = '#C49958';
   return (
-    <Wrap gap='10px' justify='center'>
-      <WrapItem alignItems='start' >
-        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor, padding: '0.6em'}}>
+    <div className="flex flex-wrap gap-2.5 justify-center">
+      <div className="self-start">
+        <div className="flex flex-col p-2.5" style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
           <PieceStand pieceInHand={wPieceOfHand} turn={false} disabled={game.turn} selection={selection} handleSelectPiece={handleSelectInHandPiece} />
-          <Text>後手</Text>
-        </Stack>
-      </WrapItem>
-      <WrapItem>
+          <p>後手</p>
+        </div>
+      </div>
+      <div>
         <svg {...{width, height}} className='disable-select'>
           <g transform={`translate(${margin},${margin+heightGuide}) scale(${scale},${scale})`}>
 
@@ -135,14 +134,14 @@ function ShogiBoardSvg(props: Props) {
             <BoardGrid size={gridSize} scale={scale} />
           </g>
         </svg>
-      </WrapItem>
-      <WrapItem alignItems='end'>
-        <Stack direction='column' style={{width: standWidth, height: standHeight, backgroundColor: standColor, padding: '0.6em'}}>
-          <Text>先手</Text>
+      </div>
+      <div className="self-end">
+        <div className="flex flex-col p-2.5" style={{width: standWidth, height: standHeight, backgroundColor: standColor}}>
+          <p>先手</p>
           <PieceStand pieceInHand={bPieceOfHand} turn={true} disabled={!game.turn} selection={selection} handleSelectPiece={handleSelectInHandPiece} />
-        </Stack>
-      </WrapItem>
-    </Wrap>
+        </div>
+      </div>
+    </div>
   );
 }
 

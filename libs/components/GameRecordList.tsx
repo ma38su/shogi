@@ -1,4 +1,3 @@
-import { Text } from "@chakra-ui/react";
 import React from "react";
 import { GameRecord, indexToXY, xToLabel, yToLabel } from "../shogi";
 
@@ -17,8 +16,8 @@ function xyToLabel(x: number, y: number) {
 const GameRecordList = React.memo(function GameRecordList(props: Props) {
   const { records } = props;
   return (
-    <>
-      <Text>棋譜</Text>
+    <div className="mt-4">
+      <p className="font-bold">棋譜</p>
       {
         records.map(record => {
           const {
@@ -30,10 +29,10 @@ const GameRecordList = React.memo(function GameRecordList(props: Props) {
             behavior,
           } = record;
 
-          return <Text key={move}>{move}手目 {turn ? '▲' : '△'} {xyToLabel(x, y)} {piece}{ behavior }</Text>
+          return <p key={move}>{move}手目 {turn ? '▲' : '△'} {xyToLabel(x, y)} {piece}{ behavior }</p>
         })
       }
-    </>
+    </div>
   )
 });
 

@@ -1,27 +1,40 @@
 # Shogi38
 
-Shogi Board Prototype
+将棋盤プロトタイプ - AI対戦機能付き
 
-## Demo
+## デモ
 
-[shogi38.vercel.app](https://shogi38.vercel.app/)
+[GitHub Pages](https://ma38su.github.io/shogi/)
 
-## How to run
+## セットアップ
 
 ```sh
 npm install
 ```
 
-## How to run
+## 開発
 
-### For development
 ```sh
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで表示される URL を開いてください。
 
+## ビルド
 
-## References
+```sh
+npm run build
+```
+
+`dist/` ディレクトリに静的ファイルが出力されます。
+
+## 技術スタック
+
+- [Vite](https://vite.dev/) - ビルドツール
+- [React](https://react.dev/) - UI ライブラリ
+- [Tailwind CSS](https://tailwindcss.com/) - スタイリング
+- TypeScript
+
+## 参考
 
 - [やねうら王 公式サイト - 【連載】評価関数を作ってみよう！その1](https://yaneuraou.yaneu.com/2020/11/17/make-evaluate-function/)

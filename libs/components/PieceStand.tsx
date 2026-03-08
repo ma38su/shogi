@@ -1,5 +1,4 @@
-import { Button, Text, Wrap, WrapItem } from "@chakra-ui/react";
-import { CapturablePieceList, PieceSelection, PieceType, PlayerTurn } from "../shogi";
+import { CapturablePieceList, PieceSelection, PieceType } from "../shogi";
 import { PieceSvg } from "./PieceSvg";
 
 type Props = {
@@ -21,7 +20,7 @@ const PieceStand = (props: Props) => {
   } = props;
 
   return (
-    <Wrap >
+    <div className="flex flex-wrap gap-1">
     {
       CapturablePieceList
         .filter(piece => pieceInHand.has(piece))
@@ -32,15 +31,21 @@ const PieceStand = (props: Props) => {
           const selected = selection != null && selection.piece === type && selection.turn === turn;
           const handleClick = () => handleSelectPiece(selected ? null : type);
           return (
-            <WrapItem key={type}>
-              <Button style={{width: '4.75em', padding: '0em'}} colorScheme={selected ? 'blue' : '#C49958'} onClick={handleClick} disabled={disabled}>
-                <PieceSvg key={type} width={40} height={40} turn={turn} type={type} /> x{val}
-              </Button>
-            </WrapItem>
+            <button
+              key={type}
+              className={`flex items-center px-1 py-0.5 rounded cursor-pointer ${
+                selected ? 'bg-blue-600 text-white' : 'bg-[#C49958] hover:bg-[#b08848]'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={handleClick}
+              disabled={disabled}
+              style={{width: '4.75em'}}
+            >
+              <PieceSvg key={type} width={40} height={40} turn={turn} type={type} /> x{val}
+            </button>
           );
         })
     }
-    </Wrap>
+    </div>
   );
 };
 export { PieceStand }

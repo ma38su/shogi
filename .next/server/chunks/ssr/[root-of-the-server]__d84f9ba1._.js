@@ -1,0 +1,3 @@
+module.exports=[8171,(a,b,c)=>{b.exports=a.x("react/jsx-runtime",()=>require("react/jsx-runtime"))},70148,a=>a.a(async(b,c)=>{try{let b=await a.y("@chakra-ui/react-053c2292316c669d");a.n(b),c()}catch(a){c(a)}},!0),67298,a=>a.a(async(b,c)=>{try{var d=a.i(8171),e=a.i(70148),f=b([e]);function g({Component:a,pageProps:b}){return(0,d.jsx)(e.ChakraProvider,{value:e.defaultSystem,children:(0,d.jsx)(a,{...b})})}[e]=f.then?(await f)():f,a.s(["default",()=>g]),c()}catch(a){c(a)}},!1)];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__d84f9ba1._.js.map
